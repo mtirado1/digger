@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'digger.ui'
-#
-# Created by: PyQt4 UI code generator 4.11.4
-#
-# WARNING! All changes made in this file will be lost!
+
 import sys
 import math
 from PyQt4 import QtCore, QtGui, QtXml
-#from diggerfuncs import *
 from diggerUi import *
 import platform
 __version__ = "1.0.0"
@@ -104,17 +99,23 @@ class Main(QtGui.QMainWindow):
 			load_exit_id = intFromQStr(element.attribute("id"))
 			load_exit_source = intFromQStr(element.attribute("source"))
 			load_exit_dest = intFromQStr(element.attribute("destination"))
-			load_exit_name = load_exit_alias = None
+			load_exit_twoway = str(element.attribute("twoway"))
+			load_exit_name = load_exit_return = load_exit_alias = None
 			node = element.firstChild()
 			while load_exit_name is None or load_exit_alias is None:
 				if node.isNull():
 					raise ValueError, "Missing name or alias"
 				if node.toElement().tagName() == "name":
 					load_exit_name = getText(node)
+				if node.toElement().tagName() == "return":
+					load_exit_return = getText(node)
 				elif node.toElement().tagName() == "alias":
 					load_exit_alias = getText(node)
 				node = node.nextSibling()
 			exitList.append(Exit(load_exit_name, load_exit_id, load_exit_source))
+			if load_exit_twoway == "True":
+				exitList[id_exit].twoWay = True
+				exitList[id_exit].returnName = load_exit_return
 			exitList[id_exit].alias = load_exit_alias
 			exitList[id_exit].dest = load_exit_dest
 			self.ui.scene.addItem(exitList[id_exit].line)
@@ -203,19 +204,20 @@ class Main(QtGui.QMainWindow):
 					raise IOError, unicode(fsave.errorString())
 				stream = QTextStream(fsave)
 				stream.setCodec("UTF-8")
-				stream << "<?xml version='1.0' encoding='UTF-8'?>\n" << "<!DOCTYPE DIGGER>\n" << "<DIGGER VERSION='1.0'>\n"
+				stream << ("<?xml version='1.0' encoding='UTF-8'?>\n" + "<!DOCTYPE DIGGER>\n" + "<DIGGER VERSION='%s'>\n" % (__version__))
 				stream << ("<map width='%d' height='%d' bcolor='%s'>\n" % (self.ui.graphicsView.width(), self.ui.graphicsView.height(), self.bColor))
 				global roomList
 				global exitList
-				for x in xrange(len(roomList)):
-					stream << ("\t<room id='%d' x='%d' y='%d'>\n" % (roomList[x].id, roomList[x].x, roomList[x].y))
-					stream << "\t\t<name> " << Qt.escape(roomList[x].name) << " </name>\n"
-					stream << "\t\t<description> " << Qt.escape(roomList[x].desc) << " </description>\n"
+				for iRoom in roomList:
+					stream << ("\t<room id='%d' x='%d' y='%d'>\n" % (iRoom.id, iRoom.x, iRoom.y))
+					stream << "\t\t<name> " << Qt.escape(iRoom.name) << " </name>\n"
+					stream << "\t\t<description> " << Qt.escape(iRoom.desc) << " </description>\n"
 					stream << "\t</room>\n"
-				for x in xrange(len(exitList)):
-					stream << ("\t<exit id='%d' source='%d' destination='%d'>\n" % (exitList[x].id, exitList[x].source, exitList[x].dest))
-					stream << "\t\t<name> " << Qt.escape(exitList[x].name) << " </name>\n"
-					stream << "\t\t<alias> " << Qt.escape(exitList[x].alias) << " </alias>\n"
+				for iExit in exitList:
+					stream << ("\t<exit id='%d' source='%d' destination='%d' twoway='%s'>\n" % (iExit.id, iExit.source, iExit.dest, str(iExit.twoWay)))
+					stream << "\t\t<name> " << Qt.escape(iExit.name) << " </name>\n"
+					stream << "\t\t<return> " << Qt.escape(iExit.returnName) << " </return>\n"
+					stream << "\t\t<alias> " << Qt.escape(iExit.alias) << " </alias>\n"
 					stream << "\t</exit>\n"
 				for x in xrange(len(labelList)):
 					stream << ("\t<label x='%d' y='%d'> " % (labelList[x].x(), labelList[x].y()))
@@ -274,9 +276,6 @@ class Main(QtGui.QMainWindow):
 		self.ui.scene.clear()
 
 	def drawAll(self):
-		# TODO:
-		# Room, label, exit removal and editing
-		# SAVE AND OPEN file
 		global roomList
 		global exitList
 		global labelList
@@ -308,6 +307,8 @@ class Main(QtGui.QMainWindow):
 			for k in xrange(len(exitList)):
 				if exitList[k].source == roomList[j].id:
 					roomString = roomString + exitList[k].name + "<br />"
+				if exitList[k].dest == roomList[j].id and exitList[k].twoWay:
+					roomString = roomString + exitList[k].returnName + "<br />"
 			roomList[j].text.setHtml(roomString + "</p>")
 			roomList[j].text.setPos(QPointF(roomList[j].x + ROOM_CENTER + 2 - (roomList[j].text.boundingRect().width() / 2), roomList[j].y + ROOM_SIZE + 5))
 			roomList[j].box.setBrush(QColor("#FF0000"))
@@ -363,19 +364,34 @@ class Main(QtGui.QMainWindow):
 
 	def openExit(self):
 		exitDialog = newExit(self)
+		exitDialog.setData()
 		if exitDialog.exec_():
 			global exitList
 			global id_exit
-			if int(exitDialog.le2.text()) < len(roomList) and int(exitDialog.le2.text()) >= 0:
-				exitList.append(Exit(exitDialog.le.text(), id_exit, int(exitDialog.le2.text())))
-			if exitDialog.le3.text() != "" and int(exitDialog.le3.text()) < len(roomList):
-				exitList[id_exit].dest = int(exitDialog.le3.text())
-			elif exitDialog.le3.text() == "": #No destination
-				exitList[id_exit].dest = -1
+			exitList.append(Exit(exitDialog.le.text(), id_exit, exitDialog.rDict[exitDialog.combo3.currentText()]))
+			if exitDialog.checkBox.isChecked():
+				exitList[id_exit].twoWay = True
+				exitList[id_exit].returnName = exitDialog.le2.text()
+			exitList[id_exit].dest = exitDialog.rDict[exitDialog.combo4.currentText()]
 			self.ui.scene.addItem(exitList[id_exit].line)
 			self.drawAll()
 			id_exit = id_exit + 1
 			exitDialog.close()
+	def openExitName(self, source, destination):
+		global id_exit
+		global roomList
+		global exitList
+		exitList.append(Exit("##placeholder##", id_exit, roomList[source].id)) # User will be asked for name soon
+		exitList[id_exit].dest = destination
+		self.ui.scene.addItem(exitList[id_exit].line)
+		exitDialog = newExitName()
+		if exitDialog.exec_():
+			exitList[id_exit].name = exitDialog.le.text()
+			if exitDialog.checkBox.isChecked():
+				exitList[id_exit].twoWay = True
+				exitList[id_exit].returnName = exitDialog.le2.text()
+			self.drawAll()
+		id_exit = id_exit + 1
 
 	def addLabel(self, x_, y_):
 		global labelDialog

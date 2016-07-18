@@ -21,15 +21,43 @@ class mapView(QtGui.QGraphicsView):
 	def __init__(self, parent=None):
 		super(mapView, self).__init__(parent)
 		self.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
+		self.joinExit = 0
+		self.source = -1
+		self.tempLine = QGraphicsLineItem()
+		self.setMouseTracking(True)
 
 	def isWithin(self, a, b, r):
 		#Checks if a is within b+r and b-r
 		return (a >= b) and (a <= b+r)
 
+	def mouseMoveEvent(self, event):
+		QGraphicsView.mouseMoveEvent(self, event)
+		if self.joinExit == 1:
+			self.tempLine.setLine(roomList[self.source].x + ROOM_CENTER, roomList[self.source].y + ROOM_CENTER, event.x(), event.y())
+
+	def mousePressEvent(self, event):
+		global roomList
+		global exitList
+		global id_exit
+		QGraphicsView.mousePressEvent(self, event)
+		if self.joinExit == 1:
+			check = 0
+			for iRoom in roomList:
+				if self.isWithin(event.x(), iRoom.x, ROOM_SIZE) and self.isWithin(event.y(), iRoom.y, ROOM_SIZE):
+					check = 1
+					self.parent().parent().openExitName(self.source, iRoom.id)
+					self.parent().parent().ui.scene.removeItem(self.tempLine)
+					break
+			if check == 0:
+				self.parent().parent().ui.scene.removeItem(self.tempLine)
+			self.joinExit = 0
+
 	def contextMenuEvent(self, event):
 		#Check if the user clicked on a room
 		global roomList
 		global labelList
+		global exitList
+		global id_exit
 		check = 0
 		k = 0
 		for i in range(len(roomList)):
@@ -43,10 +71,14 @@ class mapView(QtGui.QGraphicsView):
 					check = 2
 		#User clicked on a room
 		if check == 1:
+			global exitList
 			menu = QMenu()
 			actionViewDetails = menu.addAction("#" + str(k) + ": " + roomList[k].name)
 			actionEditRoom = menu.addAction("Edit Properties")
+			actionAddExit = menu.addAction("Add Exit")
 			actionDeleteRoom = menu.addAction("Delete Room")
+			for x in exitList:
+				print x.name
 			action = menu.exec_(event.globalPos())
 			if action == actionEditRoom:
 				editDialog = editRoom()
@@ -58,6 +90,10 @@ class mapView(QtGui.QGraphicsView):
 					roomList[k].y=int(editDialog.le4.text())
 					self.parent().parent().drawAll()
 					editDialog.close()
+			elif action == actionAddExit:
+				self.joinExit = 1
+				self.source = k
+				self.parent().parent().ui.scene.addItem(self.tempLine)
 			elif action == actionDeleteRoom:
 				self.parent().parent().deleteRoom(k)
 		#User clicked on a label

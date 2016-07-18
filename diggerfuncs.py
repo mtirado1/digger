@@ -20,6 +20,7 @@ SCENE_Y = 669
 roomList = []
 exitList = []
 labelList = []
+global id_exit
 id_room = 0
 id_exit = 0
 id_label = 0
@@ -100,7 +101,9 @@ class Exit:
 	type='exit'
 	def __init__(self, name, id_, source):
 		self.id = id_
+		self.twoWay = False
 		self.name = name
+		self.returnName = ""
 		self.alias = ""
 		self.desc = ""
 		self.source = source
@@ -141,16 +144,21 @@ class exportClass(QDialog):
 		self.browser.setGeometry(QRect(0, 0, 500, 500))
 	def exportAll(self):
 		strExport = ""
-		for k in xrange(len(roomList)):
-			strExport = strExport + "@dig/teleport " + roomList[k].name + "\n"
-			if roomList[k].desc != "":
-				strExport = strExport + "@desc here=" + roomList[k].desc + "\n"
-			strExport = strExport + "@set me=room_id" + str(k) +":[loc(me)]" + "\n"
-		for l in xrange(len(exitList)):
-			strExport = strExport + "@tel [v(room_id" + str(exitList[l].source) + ")]" + "\n"
-			strExport = strExport + "@open " + exitList[l].name + "\n"
-			if exitList[l].dest != -1:
-				strExport = strExport + "@link " + exitList[l].name + "=" + "[v(room_id" + str(exitList[l].dest) + ")]" + "\n"
+		for k in roomList:
+			strExport = strExport + "@dig/teleport " + k.name + "\n"
+			if k.desc != "":
+				strExport = strExport + "@desc here=" + k.desc + "\n"
+			strExport = strExport + "@set me=room_id" + str(k.id) + ":[loc(me)]" + "\n"
+		for k in exitList:
+			strExport = strExport + "@tel [v(room_id" + str(k.source) + ")]" + "\n"
+			if k.twoWay == False:
+				strExport = strExport + "@open " + k.name + "\n"
+				if k.dest != -1:
+					strExport = strExport + "@link " + k.name + "=" + "[v(room_id" + str(k.dest) + ")]" + "\n"
+			else: # Two way exit
+				strExport = strExport + "@open " + k.name + "=" + "[v(room_id" + str(k.dest) + ")], " + k.returnName + "\n"
+		for k in roomList:
+			strExport = strExport + "&room_id" + str(k.id) + " me\n"
 		self.browser.setText(strExport)
 
 class optionsClass(QDialog):
@@ -221,24 +229,85 @@ class editRoom(QDialog):
 		self.le3.setText(str(int(roomList[room].x)))
 		self.le4.setText(str(int(roomList[room].y)))
 
+class newExitName(QDialog):
+	def __init__(self, parent = None):
+		super(newExitName, self).__init__(parent)
+		layout = QFormLayout()
+		self.lbl = QLabel("Name")
+		self.le = QLineEdit()
+		self.lbl2 = QLabel("Return name")
+		self.le2 = QLineEdit()
+		self.checkBox = QRadioButton(self)
+		self.boxLbl = QLabel("Two way exit")
+		self.setWindowTitle("New Exit")
+		self.btn1 = QPushButton("Ok")
+
+		self.hbox = QHBoxLayout()
+		self.hbox.addWidget(self.checkBox)
+		self.hbox.addWidget(self.boxLbl)
+		self.hbox.addStretch()
+
+		layout.addRow(self.lbl,self.le)
+		layout.addRow(self.lbl2, self.le2)
+		layout.addRow(self.hbox)
+		layout.addRow(self.btn1)
+		self.setLayout(layout)
+		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
+
+		self.checkBox.toggled.connect(self.ButtonHide)
+		self.checkBox.toggle()
+	def ButtonHide(self, state):
+		if self.checkBox.isChecked():
+			self.le2.setEnabled(True)
+		else:
+			self.le2.setEnabled(False)
+
 class newExit(QDialog):
 	def __init__(self, parent = None):
 		super(newExit, self).__init__(parent)
 		layout = QFormLayout()
+		self.rDict = {}
 		self.lbl = QLabel("Name")
 		self.le = QLineEdit()
-		layout.addRow(self.lbl,self.le)
-		self.lbl2 = QLabel("Source")
+		self.lbl2 = QLabel("Return name")
 		self.le2 = QLineEdit()
-		layout.addRow(self.lbl2, self.le2)
-		self.lbl3 = QLabel("Destination")
-		self.le3 = QLineEdit()
-		layout.addRow(self.lbl3, self.le3)
-		self.setLayout(layout)
+		self.checkBox = QRadioButton(self)
+		self.boxLbl = QLabel("Two way exit")
+		self.lbl3 = QLabel("Source")
+		self.combo3 = QComboBox()
 		self.setWindowTitle("New Exit")
 		self.btn1 = QPushButton("Ok")
+		self.lbl4 = QLabel("Destination")
+		self.combo4 = QComboBox()
+		self.hbox = QHBoxLayout()
+		self.hbox.addWidget(self.checkBox)
+		self.hbox.addWidget(self.boxLbl)
+		self.hbox.addStretch()
+
+		layout.addRow(self.lbl,self.le)
+		layout.addRow(self.lbl2, self.le2)
+		layout.addRow(self.hbox)
+		layout.addRow(self.lbl3, self.combo3)
+		layout.addRow(self.lbl4, self.combo4)
+		self.setLayout(layout)
+
 		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
+		self.checkBox.toggled.connect(self.ButtonHide)
+		self.checkBox.toggle()
 		layout.addRow(self.btn1)
+	def ButtonHide(self, state):
+		if self.checkBox.isChecked():
+			self.le2.setEnabled(True)
+		else:
+			self.le2.setEnabled(False)
+	def setData(self):
+		global roomList
+		self.combo4.addItem("#-1: No destination")
+		self.rDict["#-1: No destination"] = -1
+		for i in roomList:
+			self.rDict["#" + str(i.id) + ": " + i.name] = i.id
+			self.combo3.addItem("#" + str(i.id) + ": " + i.name)
+			self.combo4.addItem("#" + str(i.id) + ": " + i.name)
 
 class addLabel(QDialog):
 	def __init__(self, parent = None):
