@@ -116,12 +116,16 @@ class Label:
 		self.box = labelBox()
 		self.x = x_
 		self.y = y_
+		self.normalText = text
 		self.text = QGraphicsTextItem()
-		self.text.setHtml("<p>" + text + "</p>")
+		self.text.setHtml("<p>" + self.normalText + "</p>")
 		self.text.setPos(x_ - (self.text.boundingRect().width() / 2), y_ - (self.text.boundingRect().height() / 2))
 		self.box.setPos(x_ - (self.text.boundingRect().width() / 2), y_ - (self.text.boundingRect().height() / 2))
 		self.box.setBrush(QColor("#FFF7A9"))
 		self.box.setRect(0, 0, self.text.boundingRect().width(), self.text.boundingRect().height())
+	def setText(self, text_):
+		self.normalText = text_
+		self.text.setHtml("<p>" + self.normalText + "</p>")
 
 class textDialog(QDialog):
 	def __init__(self, title, text, parent = None):

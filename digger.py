@@ -68,6 +68,7 @@ class Main(QtGui.QMainWindow):
 				child = child.nextSibling()
 			return text.trimmed()
 		def readLabelNode(element):
+			global id_label
 			load_label_x = intFromQStr(element.attribute("x"))
 			load_label_y = intFromQStr(element.attribute("y"))
 			load_label_text = getText(element)
@@ -225,8 +226,8 @@ class Main(QtGui.QMainWindow):
 					stream << "\t\t<alias> " << Qt.escape(iExit.alias) << " </alias>\n"
 					stream << "\t</exit>\n"
 				for x in xrange(len(labelList)):
-					stream << ("\t<label x='%d' y='%d'> " % (labelList[x].x(), labelList[x].y()))
-					stream << "\t\t" << Qt.escape(labelList[x].text())
+					stream << ("\t<label x='%d' y='%d'> " % (labelList[x].x, labelList[x].y))
+					stream << "\t\t" << Qt.escape(labelList[x].normalText)
 					stream << "\t</label>\n"
 				stream << "</map>\n"
 
@@ -395,7 +396,6 @@ class Main(QtGui.QMainWindow):
 		id_exit = id_exit + 1
 
 	def addLabel(self, x_, y_):
-		global labelDialog
 		labelDialog = addLabel()
 		if labelDialog.exec_():
 			global labelList
@@ -407,6 +407,14 @@ class Main(QtGui.QMainWindow):
 			self.drawAll()
 			id_label = id_label + 1
 			labelDialog.close()
+	def deleteLabel(self, id_):
+		global labelList
+		global id_label
+		self.ui.scene.removeItem(labelList[id_].text)
+		self.ui.scene.removeItem(labelList[id_].box)
+		del labelList[id_]
+		id_label = id_label - 1
+		self.drawAll()
 
 
 if __name__ == "__main__":

@@ -100,6 +100,15 @@ class mapView(QtGui.QGraphicsView):
 			actionEditLabel = menu.addAction("Edit Properties")
 			actionDeleteLabel = menu.addAction("Delete Label")
 			action = menu.exec_(event.globalPos())
+			if action == actionEditLabel:
+				editDialog = addLabel()
+				editDialog.setWindowTitle("Edit Label")
+				editDialog.le.setText(labelList[k].normalText)
+				if editDialog.exec_():
+					labelList[k].setText(editDialog.le.text())
+					labelList[k].box.setRect(0, 0, labelList[k].text.boundingRect().width(), labelList[k].text.boundingRect().height())
+			elif action == actionDeleteLabel:
+				self.parent().parent().deleteLabel(k)
 		#Map Actions, user clicked on scene
 		elif check == 0:
 			menu = QMenu()
