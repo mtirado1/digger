@@ -77,8 +77,6 @@ class mapView(QtGui.QGraphicsView):
 			actionEditRoom = menu.addAction("Edit Properties")
 			actionAddExit = menu.addAction("Add Exit")
 			actionDeleteRoom = menu.addAction("Delete Room")
-			for x in exitList:
-				print x.name
 			action = menu.exec_(event.globalPos())
 			if action == actionEditRoom:
 				editDialog = editRoom()
@@ -133,6 +131,8 @@ class Ui_MainWindow(object):
 		self.menuFile.setObjectName(_fromUtf8("menuFile"))
 		self.menuEdit = QtGui.QMenu(self.menubar)
 		self.menuEdit.setObjectName(_fromUtf8("menuEdit"))
+		self.menuView = QtGui.QMenu(self.menubar)
+		self.menuView.setObjectName(_fromUtf8("menuView"))
 		self.actionOptions = QtGui.QAction(self.menubar)
 		self.actionOptions.setObjectName(_fromUtf8("actionOptions"))
 		self.actionAbout = QtGui.QAction(self.menubar)
@@ -147,19 +147,28 @@ class Ui_MainWindow(object):
 
 		self.actionNew = QtGui.QAction(MainWindow)
 		self.actionNew.setObjectName(_fromUtf8("actionNew"))
+		self.actionNew.setShortcut("Ctrl+N")
 		self.actionOpen = QtGui.QAction(MainWindow)
 		self.actionOpen.setObjectName(_fromUtf8("actionOpen"))
+		self.actionOpen.setShortcut("Ctrl+O")
 		self.actionSave = QtGui.QAction(MainWindow)
 		self.actionSave.setObjectName(_fromUtf8("actionSave"))
-		self.menuFile.addSeparator()
+		self.actionSave.setShortcut("Ctrl+S")
+		self.actionToggleText = QtGui.QAction(MainWindow, checkable=True)
+		self.actionToggleText.setChecked(True)
+		self.actionSave.setObjectName(_fromUtf8("actionToggleText"))
 
 		self.menuFile.addAction(self.actionNew)
 		self.menuFile.addAction(self.actionOpen)
+		self.menuFile.addSeparator()
 		self.menuFile.addAction(self.actionSave)
 		self.menuFile.addAction(self.actionExport)
 
+		self.menuView.addAction(self.actionToggleText)
+
 		self.menubar.addAction(self.menuFile.menuAction())
 		self.menubar.addAction(self.menuEdit.menuAction())
+		self.menubar.addAction(self.menuView.menuAction())
 		self.menubar.addAction(self.actionOptions)
 		self.menubar.addAction(self.actionAbout)
 		self.retranslateUi(MainWindow)
@@ -174,6 +183,7 @@ class Ui_MainWindow(object):
 		MainWindow.setWindowTitle(_translate("MainWindow", "Digger", None))
 		self.menuFile.setTitle(_translate("MainWindow", "File", None))
 		self.menuEdit.setTitle(_translate("MainWindow", "Edit", None))
+		self.menuView.setTitle(_translate("MainWindow", "View", None))
 		self.actionOptions.setText(_translate("MainWindow", "Options", None))
 		self.actionAbout.setText(_translate("MainWindow", "About", None))
 
@@ -181,3 +191,4 @@ class Ui_MainWindow(object):
 		self.actionNew.setText(_translate("MainWindow", "&New", None))
 		self.actionOpen.setText(_translate("MainWindow", "&Open", None))
 		self.actionSave.setText(_translate("MainWindow", "&Save", None))
+		self.actionToggleText.setText(_translate("MainWindow", "Show details", None))

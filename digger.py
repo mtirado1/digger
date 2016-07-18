@@ -36,6 +36,7 @@ class Main(QtGui.QMainWindow):
 		self.ui.actionAbout.triggered.connect(self.viewAbout)
 		self.ui.actionOpen.triggered.connect(self.openFile)
 		self.ui.actionSave.triggered.connect(self.saveFile)
+		self.ui.actionToggleText.triggered.connect(self.toggleText)
 		self.isNewFile = 1
 		self.fileName = "Untitled"
 		self.bColor = "#FFFFFF"
@@ -44,6 +45,10 @@ class Main(QtGui.QMainWindow):
 	def resizeEvent(self, event):
 		self.ui.graphicsView.setGeometry(QtCore.QRect(0, 0, event.size().width(), event.size().height()))
 		self.ui.scene.setSceneRect(0, 0, event.size().width(), event.size().height() - 14)
+
+
+	def toggleText(self):
+		self.drawAll()
 
 	def readMapNode(self, element):
 		global roomList
@@ -235,7 +240,7 @@ class Main(QtGui.QMainWindow):
 		return check and (number[0] == '#')
 
 	def viewAbout(self):
-		QMessageBox.about(self, "About Digger", """<b>Digger</b> v %s<p>Copyright &copy; 2016 Martin Tirado. All rights reserved. <p> This program can be used to design MUSH words through a graphical interface. <p> Python %s - Qt %s - PyQt %s on %s""" % (__version__, platform.python_version(), QT_VERSION_STR, PYQT_VERSION_STR, platform.system()))
+		QMessageBox.about(self, "About Digger", """<b>Digger</b> v %s<p>Copyright &copy; 2016 Martin Tirado. All rights reserved. <p> This program can be used to design MUSH words through a graphical interface. <p> Python %s - Qt %s - PyQt %s on %s <p> Hosted on <a href='https://github.com/mtirado1/digger'> Github </a>""" % (__version__, platform.python_version(), QT_VERSION_STR, PYQT_VERSION_STR, platform.system()))
 
 	def setOptions(self):
 		optionsDialog = optionsClass(self)
@@ -263,7 +268,7 @@ class Main(QtGui.QMainWindow):
 		self.fileName = "Untitled"
 		self.bColor = "#FFFFFF"
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
-		self.ui.scene.setBackgroundBrush(self.bColor)
+		self.ui.scene.setBackgroundBrush(QColor(self.bColor))
 		self.isNewFile = 1
 		global roomList
 		global exitList
@@ -309,7 +314,10 @@ class Main(QtGui.QMainWindow):
 					roomString = roomString + exitList[k].name + "<br />"
 				if exitList[k].dest == roomList[j].id and exitList[k].twoWay:
 					roomString = roomString + exitList[k].returnName + "<br />"
-			roomList[j].text.setHtml(roomString + "</p>")
+			if self.ui.actionToggleText.isChecked():
+				roomList[j].text.setHtml(roomString + "</p>")
+			else:
+				roomList[j].text.setHtml("")
 			roomList[j].text.setPos(QPointF(roomList[j].x + ROOM_CENTER + 2 - (roomList[j].text.boundingRect().width() / 2), roomList[j].y + ROOM_SIZE + 5))
 			roomList[j].box.setBrush(QColor("#FF0000"))
 			roomList[j].box.setRect(0, 0, ROOM_SIZE, ROOM_SIZE)
@@ -317,8 +325,8 @@ class Main(QtGui.QMainWindow):
 			self.ui.scene.addItem(roomList[j].text)
 			roomList[j].box.setZValue(1)
 		for j in xrange(len(labelList)):
-			labelList[j].text.setZValue(1)
-			labelList[j].box.setZValue(0)
+			labelList[j].text.setZValue(10)
+			labelList[j].box.setZValue(9)
 			labelList[j].text.setPos(labelList[j].x, labelList[j].y)
 			labelList[j].box.setPos(labelList[j].x, labelList[j].y)
 
@@ -340,26 +348,19 @@ class Main(QtGui.QMainWindow):
 	def deleteRoom(self, id_):
 		self.ui.scene.removeItem(roomList[id_].box)
 		self.ui.scene.removeItem(roomList[id_].text)
-		del roomList[id_]
+
 		global id_room
 		global id_exit
 		id_room = id_room - 1
 		check = 1
-		p = 0
-		while check == 1:
-			for x in xrange(len(exitList)):
-				if exitList[x].source == id_:
-					p = x
-					check = 1
-					break
-				else:
-					check = 0
-			if not exitList:
-				check = 0
-			if check == 1:
-				self.ui.scene.removeItem(exitList[p].line)
-				del exitList[p]
+		for x in xrange(len(exitList)):
+			if exitList[x].source == roomList[id_].id:
+				self.ui.scene.removeItem(exitList[x].line)
+				del exitList[x]
 				id_exit = id_exit - 1
+			elif exitList[x].dest == roomList[id_].id: # The exits still exists, but without destination
+				exitList[x].dest = -1
+		del roomList[id_]
 		self.drawAll()
 
 	def openExit(self):
