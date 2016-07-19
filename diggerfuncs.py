@@ -1,6 +1,7 @@
 import sys
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 
 
@@ -137,7 +138,7 @@ class textDialog(QDialog):
 		self.setWindowTitle(title)
 		self.btn1 = QPushButton("Ok")
 		layout.addRow(self.btn1)
-		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
+		self.btn1.clicked.connect(self.accept)
 
 class exportClass(QDialog):
 	def __init__(self, parent = None):
@@ -185,7 +186,7 @@ class optionsClass(QDialog):
 		layout.addRow(self.le3)
 		layout.addRow(self.btn1)
 		self.setLayout(layout)
-		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
+		self.btn1.clicked.connect(self.accept)
 	def setData(self):
 		self.le.setText(str(self.parent().ui.graphicsView.width()))
 		self.le2.setText(str(self.parent().ui.graphicsView.height()))
@@ -203,7 +204,7 @@ class newRoom(QDialog):
 		self.setWindowTitle("New Room")
 		self.btn1 = QPushButton("Ok")
 		layout.addRow(self.btn1)
-		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
+		self.btn1.clicked.connect(self.accept)
 
 class editRoom(QDialog):
 	def __init__(self, parent = None):
@@ -225,7 +226,7 @@ class editRoom(QDialog):
 		self.setWindowTitle("Edit Room Properties")
 		self.btn1 = QPushButton("Ok")
 		layout.addRow(self.btn1)
-		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
+		self.btn1.clicked.connect(self.accept)
 	def setData(self, room):
 		global boxList
 		self.le.setText(roomList[room].name)
@@ -256,8 +257,7 @@ class newExitName(QDialog):
 		layout.addRow(self.hbox)
 		layout.addRow(self.btn1)
 		self.setLayout(layout)
-		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
-
+		self.btn1.clicked.connect(self.accept)
 		self.checkBox.toggled.connect(self.ButtonHide)
 		self.checkBox.toggle()
 	def ButtonHide(self, state):
@@ -295,7 +295,7 @@ class newExit(QDialog):
 		layout.addRow(self.lbl4, self.combo4)
 		self.setLayout(layout)
 
-		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
+		self.btn1.clicked.connect(self.accept)
 		self.checkBox.toggled.connect(self.ButtonHide)
 		self.checkBox.toggle()
 		layout.addRow(self.btn1)
@@ -323,5 +323,5 @@ class addLabel(QDialog):
 		self.setWindowTitle("Add Label")
 		self.btn1 = QPushButton("Ok")
 		layout.addRow(self.lbl, self.le)
-		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
+		self.btn1.clicked.connect(self.accept)
 		layout.addRow(self.btn1)

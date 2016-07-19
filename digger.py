@@ -3,11 +3,16 @@
 
 import sys
 import math
-from PyQt4 import QtCore, QtGui, QtXml
+from PyQt5 import QtCore, QtGui, QtXml
 from diggerUi import *
 import platform
 __version__ = "1.0.0"
 
+
+try:
+    from PyQt5.QtCore import QString
+except ImportError:
+    QString = str
 
 try:
 	_fromUtf8 = QtCore.QString.fromUtf8
@@ -16,18 +21,18 @@ except AttributeError:
 		return s
 
 try:
-	_encoding = QtGui.QApplication.UnicodeUTF8
+	_encoding = QtWidgets.QApplication.UnicodeUTF8
 	def _translate(context, text, disambig):
-		return QtGui.QApplication.translate(context, text, disambig, _encoding)
+		return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
 	def _translate(context, text, disambig):
-		return QtGui.QApplication.translate(context, text, disambig)
+		return QtWidgets.QApplication.translate(context, text, disambig)
 
 
 
-class Main(QtGui.QMainWindow):
+class Main(QtWidgets.QMainWindow):
 	def __init__(self):
-		QtGui.QMainWindow.__init__(self, parent = None)
+		QtWidgets.QMainWindow.__init__(self, parent = None)
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi(self)
 		self.ui.actionExport.triggered.connect(self.exportDump)
@@ -67,7 +72,7 @@ class Main(QtGui.QMainWindow):
 				if child.nodeType() == QtXml.QDomNode.TextNode:
 					text += child.toText().data()
 				child = child.nextSibling()
-			return text.trimmed()
+			return text.strip()
 		def readLabelNode(element):
 			global id_label
 			load_label_x = intFromQStr(element.attribute("x"))
@@ -86,7 +91,7 @@ class Main(QtGui.QMainWindow):
 			node = element.firstChild()
 			while load_room_name is None or load_room_desc is None:
 				if node.isNull():
-					raise ValueError, "Missing name or description"
+					raise ValueError("Missing name or description")
 				if node.toElement().tagName() == "name":
 					load_room_name = getText(node)
 				elif node.toElement().tagName() == "description":
@@ -162,7 +167,7 @@ class Main(QtGui.QMainWindow):
 		self.ui.scene.clear()
 		root = dom.documentElement()
 		if root.tagName() != "DIGGER":
-			raise ValueError, "not a Digger XML file"
+			raise ValueError("not a Digger XML file")
 		node = root.firstChild()
 		while not node.isNull():
 			if node.toElement().tagName() == "map":
@@ -171,7 +176,7 @@ class Main(QtGui.QMainWindow):
 		self.drawAll()
 
 	def openFile(self):
-		fname = QFileDialog.getOpenFileName(self, 'Open file', '/',"")
+		fname = QFileDialog.getOpenFileName(self, 'Open file', '/',"")[0]
 		if fname:
 			dom = QtXml.QDomDocument()
 			error = None
@@ -179,10 +184,10 @@ class Main(QtGui.QMainWindow):
 			try:
 				fh = QFile(fname)
 				if not fh.open(QIODevice.ReadOnly):
-					raise IOError, unicode(fh.errorString())
+					raise IOError(unicode(fh.errorString()))
 				if not dom.setContent(fh):
-					raise ValueError, "could not parse XML"
-			except (IOError, OSError, ValueError), e:
+					raise ValueError("could not parse XML")
+			except (IOError, OSError, ValueError) as e:
 				error = "Failed to import: %s" % e
 			finally:
 				if fh is not None:
@@ -193,12 +198,12 @@ class Main(QtGui.QMainWindow):
 				self.populateFromDOM(dom)
 				self.fileName = fname
 				self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
-			except ValueError, e:
+			except ValueError as e:
 				return False, "Failed to import: %s" % e
 
 
 	def saveFile(self):
-		fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "")
+		fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "")[0]
 		if fname:
 			if self.isNewFile == 1:
 				self.fileName = fname
@@ -206,7 +211,7 @@ class Main(QtGui.QMainWindow):
 				self.isNewFile = 0
 				fsave = QFile(fname)
 				if not fsave.open(QIODevice.WriteOnly):
-					raise IOError, unicode(fsave.errorString())
+					raise IOError(unicode(fsave.errorString()))
 				stream = QTextStream(fsave)
 				stream.setCodec("UTF-8")
 				stream << ("<?xml version='1.0' encoding='UTF-8'?>\n" + "<!DOCTYPE DIGGER>\n" + "<DIGGER VERSION='%s'>\n" % (__version__))
@@ -222,10 +227,10 @@ class Main(QtGui.QMainWindow):
 					stream << ("\t<exit id='%d' source='%d' destination='%d' twoway='%s'>\n" % (iExit.id, iExit.source, iExit.dest, str(iExit.twoWay)))
 					stream << "\t\t<name> " << Qt.escape(iExit.name) << " </name>\n"
 					stream << "\t\t<return> " << Qt.escape(iExit.returnName) << " </return>\n"
-					for x in xrange(len(iExit.alias)):
+					for x in range(len(iExit.alias)):
 						stream << "\t\t<alias>" << Qt.escape(iExit.alias[x]) << "</alias>\n"
 					stream << "\t</exit>\n"
-				for x in xrange(len(labelList)):
+				for x in range(len(labelList)):
 					stream << ("\t<label x='%d' y='%d'> " % (labelList[x].x, labelList[x].y))
 					stream << "\t\t" << Qt.escape(labelList[x].normalText)
 					stream << "\t</label>\n"
@@ -257,7 +262,7 @@ class Main(QtGui.QMainWindow):
 				self.ui.menubar.setGeometry(QtCore.QRect(0, 0, int(optionsDialog.le.text()), int(optionsDialog.le2.text())))
 				self.ui.scene.setSceneRect(0, 0, int(optionsDialog.le.text()), int(optionsDialog.le2.text()) - 14)
 				global roomList
-				for x in xrange(len(roomList)):
+				for x in range(len(roomList)):
 					roomList[x].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
 
 	def exportDump(self):
@@ -290,10 +295,10 @@ class Main(QtGui.QMainWindow):
 		global exitList
 		global labelList
 		def getPosOfRoom(room_id_):
-			for x in xrange(len(roomList)):
+			for x in range(len(roomList)):
 				if roomList[x].id == room_id_:
 					return x
-		for x in xrange(len(exitList)):
+		for x in range(len(exitList)):
 			self.ui.scene.removeItem(exitList[x].line)
 			coord_a = roomList[getPosOfRoom(exitList[x].source)].x + ROOM_CENTER
 			coord_b = roomList[getPosOfRoom(exitList[x].source)].y + ROOM_CENTER
@@ -307,14 +312,14 @@ class Main(QtGui.QMainWindow):
 			exitList[x].line.setLine(coord_a, coord_b, coord_c, coord_d)
 			self.ui.scene.addItem(exitList[x].line)
 			exitList[x].line.setZValue(0)
-		for j in xrange(len(roomList)):
+		for j in range(len(roomList)):
 			self.ui.scene.removeItem(roomList[j].box)
 			self.ui.scene.removeItem(roomList[j].text)
 			roomList[j].box.setPos(roomList[j].x, roomList[j].y)
 			roomList[j].box.index=j
 			roomString = "<p><b>" + roomList[j].name + "</b>"
 			roomString = roomString + "<br />Exits:<br />"
-			for k in xrange(len(exitList)):
+			for k in range(len(exitList)):
 				if exitList[k].source == roomList[j].id:
 					roomString = roomString + exitList[k].name + "<br />"
 				if exitList[k].dest == roomList[j].id and exitList[k].twoWay:
@@ -329,7 +334,7 @@ class Main(QtGui.QMainWindow):
 			self.ui.scene.addItem(roomList[j].box)
 			self.ui.scene.addItem(roomList[j].text)
 			roomList[j].box.setZValue(1)
-		for j in xrange(len(labelList)):
+		for j in range(len(labelList)):
 			labelList[j].text.setZValue(10)
 			labelList[j].box.setZValue(9)
 			labelList[j].text.setPos(labelList[j].x, labelList[j].y)
@@ -359,7 +364,7 @@ class Main(QtGui.QMainWindow):
 		id_room = id_room - 1
 		deleted = True
 		while deleted:
-			for x in xrange(len(exitList)): # First round, delete all sources
+			for x in range(len(exitList)): # First round, delete all sources
 				if exitList[x].source == roomList[id_].id:
 					self.ui.scene.removeItem(exitList[x].line)
 					del exitList[x]
@@ -369,7 +374,7 @@ class Main(QtGui.QMainWindow):
 					deleted = False
 			if not exitList:
 				deleted = False
-		for x in xrange(len(exitList)): # Next round, fix all destinations
+		for x in range(len(exitList)): # Next round, fix all destinations
 			if exitList[x].dest == roomList[id_].id: # The exits still exists, but without destination
 				exitList[x].dest = -1
 		del roomList[id_]
@@ -429,7 +434,7 @@ class Main(QtGui.QMainWindow):
 
 
 if __name__ == "__main__":
-	app = QtGui.QApplication(sys.argv)
+	app = QtWidgets.QApplication(sys.argv)
 	window = Main()
 	window.show()
 	sys.exit(app.exec_())
