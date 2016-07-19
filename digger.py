@@ -350,17 +350,18 @@ class Main(QtGui.QMainWindow):
 			id_room = id_room + 1
 			roomDialog.close()
 
-	def deleteRoom(self, id_):
-		self.ui.scene.removeItem(roomList[id_].box)
-		self.ui.scene.removeItem(roomList[id_].text)
-
+	def deleteRoom(self, index):
 		global id_room
 		global id_exit
+		global exitList
+		global roomList
+		self.ui.scene.removeItem(roomList[index].box)
+		self.ui.scene.removeItem(roomList[index].text)
 		id_room = id_room - 1
 		deleted = True
 		while deleted:
 			for x in xrange(len(exitList)): # First round, delete all sources
-				if exitList[x].source == roomList[id_].id:
+				if exitList[x].source == roomList[index].id:
 					self.ui.scene.removeItem(exitList[x].line)
 					del exitList[x]
 					id_exit = id_exit - 1
@@ -370,9 +371,9 @@ class Main(QtGui.QMainWindow):
 			if not exitList:
 				deleted = False
 		for x in xrange(len(exitList)): # Next round, fix all destinations
-			if exitList[x].dest == roomList[id_].id: # The exits still exists, but without destination
+			if exitList[x].dest == roomList[index].id: # The exits still exists, but without destination
 				exitList[x].dest = -1
-		del roomList[id_]
+		del roomList[index]
 		self.drawAll()
 
 	def openExit(self):
