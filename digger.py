@@ -45,7 +45,8 @@ class Main(QtGui.QMainWindow):
 	def resizeEvent(self, event):
 		self.ui.graphicsView.setGeometry(QtCore.QRect(0, 0, event.size().width(), event.size().height()))
 		self.ui.scene.setSceneRect(0, 0, event.size().width(), event.size().height() - 14)
-
+		for iRoom in roomList:
+			iRoom.box.move_restrict_rect = QRectF(0, 0, event.size().width(), event.size().height() - 14)
 
 	def toggleText(self):
 		self.drawAll()
@@ -108,9 +109,7 @@ class Main(QtGui.QMainWindow):
 			load_exit_twoway = str(element.attribute("twoway"))
 			load_exit_name = load_exit_return = load_exit_alias = None
 			node = element.firstChild()
-			while load_exit_name is None or load_exit_alias is None:
-				if node.isNull():
-					raise ValueError, "Missing name or alias"
+			while not node.isNull():
 				if node.toElement().tagName() == "name":
 					load_exit_name = getText(node)
 				if node.toElement().tagName() == "return":
@@ -223,7 +222,8 @@ class Main(QtGui.QMainWindow):
 					stream << ("\t<exit id='%d' source='%d' destination='%d' twoway='%s'>\n" % (iExit.id, iExit.source, iExit.dest, str(iExit.twoWay)))
 					stream << "\t\t<name> " << Qt.escape(iExit.name) << " </name>\n"
 					stream << "\t\t<return> " << Qt.escape(iExit.returnName) << " </return>\n"
-					stream << "\t\t<alias> " << Qt.escape(iExit.alias) << " </alias>\n"
+					for x in xrange(len(iExit.alias)):
+						stream << "\t\t<alias>" << Qt.escape(iExit.alias[x]) << "</alias>\n"
 					stream << "\t</exit>\n"
 				for x in xrange(len(labelList)):
 					stream << ("\t<label x='%d' y='%d'> " % (labelList[x].x, labelList[x].y))
@@ -275,7 +275,11 @@ class Main(QtGui.QMainWindow):
 		global exitList
 		global labelList
 		global id_room
+		global id_exit
+		global id_label
 		id_room = 0
+		id_exit = 0
+		id_label = 0
 		del roomList[:]
 		del exitList[:]
 		del labelList[:]
@@ -353,13 +357,20 @@ class Main(QtGui.QMainWindow):
 		global id_room
 		global id_exit
 		id_room = id_room - 1
-		check = 1
-		for x in xrange(len(exitList)):
-			if exitList[x].source == roomList[id_].id:
-				self.ui.scene.removeItem(exitList[x].line)
-				del exitList[x]
-				id_exit = id_exit - 1
-			elif exitList[x].dest == roomList[id_].id: # The exits still exists, but without destination
+		deleted = True
+		while deleted:
+			for x in xrange(len(exitList)): # First round, delete all sources
+				if exitList[x].source == roomList[id_].id:
+					self.ui.scene.removeItem(exitList[x].line)
+					del exitList[x]
+					id_exit = id_exit - 1
+					break
+				else:
+					deleted = False
+			if not exitList:
+				deleted = False
+		for x in xrange(len(exitList)): # Next round, fix all destinations
+			if exitList[x].dest == roomList[id_].id: # The exits still exists, but without destination
 				exitList[x].dest = -1
 		del roomList[id_]
 		self.drawAll()

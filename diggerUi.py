@@ -59,41 +59,61 @@ class mapView(QtGui.QGraphicsView):
 		global exitList
 		global id_exit
 		check = 0
-		k = 0
+		objectClicked = 0
 		for i in range(len(roomList)):
 			if self.isWithin(event.x(), roomList[i].x, ROOM_SIZE) and self.isWithin(event.y(), roomList[i].y, ROOM_SIZE):
-				k = i
+				objectClicked = i
 				check = 1
 		if check == 0:
 			for i in xrange(len(labelList)):
 				if self.isWithin(event.x(), labelList[i].x, labelList[i].box.boundingRect().width()) and self.isWithin(event.y(), labelList[i].y, labelList[i].box.boundingRect().height()):
-					k = i
+					objectClicked = i
 					check = 2
 		#User clicked on a room
 		if check == 1:
 			global exitList
 			menu = QMenu()
-			actionViewDetails = menu.addAction("#" + str(k) + ": " + roomList[k].name)
+			actionViewDetails = menu.addAction("#" + str(objectClicked) + ": " + roomList[objectClicked].name)
 			actionEditRoom = menu.addAction("Edit Properties")
 			actionAddExit = menu.addAction("Add Exit")
+			exitMenu = menu.addMenu("Exits")
 			actionDeleteRoom = menu.addAction("Delete Room")
+			actionExitList = []
+			actionExitId = []
+			menuEnabled = False
+			for f in xrange(len(exitList)):
+				if exitList[f].source == roomList[objectClicked].id:
+					menuEnabled = True
+					actionExitId.append(f)
+					actionExitList.append(exitMenu.addAction(exitList[f].name))
+				if exitList[f].twoWay and exitList[f].dest == roomList[objectClicked].id:
+					menuEnabled = True
+					actionExitId.append(f)
+					actionExitList.append(exitMenu.addAction(exitList[f].returnName))
+			exitMenu.setEnabled(menuEnabled)
 			action = menu.exec_(event.globalPos())
 			if action == actionEditRoom:
 				editDialog = editRoom()
-				editDialog.setData(k)
+				editDialog.setData(objectClicked)
 				if editDialog.exec_():
-					roomList[k].name=editDialog.le.text()
-					roomList[k].desc=editDialog.le2.text()
-					roomList[k].x=int(editDialog.le3.text())
-					roomList[k].y=int(editDialog.le4.text())
+					roomList[objectClicked].name=editDialog.le.text()
+					roomList[objectClicked].desc=editDialog.le2.text()
+					roomList[objectClicked].x=int(editDialog.le3.text())
+					roomList[objectClicked].y=int(editDialog.le4.text())
 					self.parent().parent().drawAll()
 					editDialog.close()
 			elif action == actionAddExit:
 				self.joinExit = 1
-				self.source = k
+				self.source = objectClicked
 				self.parent().parent().ui.scene.addItem(self.tempLine)
 			elif action == actionDeleteRoom:
-				self.parent().parent().deleteRoom(k)
+				self.parent().parent().deleteRoom(objectClicked)
+			else:
+				for k in xrange(len(actionExitList)):
+					if action == actionExitList[k]:
+						#self.parent().parent().editExitProperties() TODO
+						pass
+						break
 		#User clicked on a label
 		elif check == 2:
 			menu = QMenu()
@@ -103,12 +123,12 @@ class mapView(QtGui.QGraphicsView):
 			if action == actionEditLabel:
 				editDialog = addLabel()
 				editDialog.setWindowTitle("Edit Label")
-				editDialog.le.setText(labelList[k].normalText)
+				editDialog.le.setText(labelList[objectClicked].normalText)
 				if editDialog.exec_():
-					labelList[k].setText(editDialog.le.text())
-					labelList[k].box.setRect(0, 0, labelList[k].text.boundingRect().width(), labelList[k].text.boundingRect().height())
+					labelList[objectClicked].setText(editDialog.le.text())
+					labelList[objectClicked].box.setRect(0, 0, labelList[objectClicked].text.boundingRect().width(), labelList[objectClicked].text.boundingRect().height())
 			elif action == actionDeleteLabel:
-				self.parent().parent().deleteLabel(k)
+				self.parent().parent().deleteLabel(objectClicked)
 		#Map Actions, user clicked on scene
 		elif check == 0:
 			menu = QMenu()

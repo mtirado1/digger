@@ -104,7 +104,7 @@ class Exit:
 		self.twoWay = False
 		self.name = name
 		self.returnName = ""
-		self.alias = ""
+		self.alias = []
 		self.desc = ""
 		self.source = source
 		self.dest = -1
