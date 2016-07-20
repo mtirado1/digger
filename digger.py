@@ -98,16 +98,20 @@ class Main(QtGui.QMainWindow):
 			load_exit_dest = int(element.getAttribute("destination"))
 			load_exit_twoway = element.getAttribute("twoway")
 			load_exit_alias = []
+			load_exit_returnAlias = []
 			load_exit_name = getText(element.getElementsByTagName("name")[0])
 			load_exit_return = getText(element.getElementsByTagName("return")[0])
 			for i in element.getElementsByTagName("alias"):
 				load_exit_alias.append(getText(i))
+			for i in element.getElementsByTagName("returnalias"):
+				load_exit_returnAlias.append(getText(i))
 
 			exitList.append(Exit(load_exit_name, load_exit_id, load_exit_source))
 			if load_exit_twoway == "True":
 				exitList[id_exit].twoWay = True
 				exitList[id_exit].returnName = load_exit_return
 			exitList[id_exit].alias = load_exit_alias
+			exitList[id_exit].returnAlias = load_exit_returnAlias
 			exitList[id_exit].dest = load_exit_dest
 			self.ui.scene.addItem(exitList[id_exit].line)
 			id_exit = id_exit + 1
@@ -189,6 +193,8 @@ class Main(QtGui.QMainWindow):
 					stream << "\t\t<return> " << Qt.escape(iExit.returnName) << " </return>\n"
 					for x in xrange(len(iExit.alias)):
 						stream << "\t\t<alias>" << Qt.escape(iExit.alias[x]) << "</alias>\n"
+					for x in xrange(len(iExit.returnAlias)):
+						stream << "\t\t<returnalias>" << Qt.escape(iExit.returnAlias[x]) << "</alias>\n"
 					stream << "\t</exit>\n"
 				for x in xrange(len(labelList)):
 					stream << ("\t<label x='%d' y='%d'> " % (labelList[x].x, labelList[x].y))

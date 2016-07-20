@@ -105,6 +105,7 @@ class Exit:
 		self.name = name
 		self.returnName = ""
 		self.alias = []
+		self.returnAlias = []
 		self.desc = ""
 		self.source = source
 		self.dest = -1
