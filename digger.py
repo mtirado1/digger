@@ -3,7 +3,9 @@
 
 import sys
 import math
-from PyQt4 import QtCore, QtGui, QtXml
+import xml.dom.minidom
+from xml.dom.minidom import parse
+from PyQt4 import QtCore, QtGui
 from diggerUi import *
 import platform
 __version__ = "1.0.0"
@@ -58,20 +60,14 @@ class Main(QtGui.QMainWindow):
 		global id_room
 		global id_exit
 		global id_label
-		def intFromQStr(qstr):
-			return int(str(qstr))
-		def getText(node):
-			child = node.firstChild()
-			text = QString()
-			while not child.isNull():
-				if child.nodeType() == QtXml.QDomNode.TextNode:
-					text += child.toText().data()
-				child = child.nextSibling()
-			return text.trimmed()
+
+		def getText(element):
+			return element.childNodes[0].data
+
 		def readLabelNode(element):
 			global id_label
-			load_label_x = intFromQStr(element.attribute("x"))
-			load_label_y = intFromQStr(element.attribute("y"))
+			load_label_x = int(element.getAttribute("x"))
+			load_label_y = int(element.getAttribute("y"))
 			load_label_text = getText(element)
 			labelList.append(Label(load_label_text, load_label_x, load_label_y))
 			self.ui.scene.addItem(labelList[id_label].text)
@@ -79,19 +75,13 @@ class Main(QtGui.QMainWindow):
 			id_label = id_label + 1
 		def readRoomNode(element):
 			global id_room
-			load_room_id = intFromQStr(element.attribute("id"))
-			load_room_x = intFromQStr(element.attribute("x"))
-			load_room_y = intFromQStr(element.attribute("y"))
-			load_room_name = load_room_desc = None
-			node = element.firstChild()
-			while load_room_name is None or load_room_desc is None:
-				if node.isNull():
-					raise ValueError, "Missing name or description"
-				if node.toElement().tagName() == "name":
-					load_room_name = getText(node)
-				elif node.toElement().tagName() == "description":
-					load_room_desc = getText(node)
-				node = node.nextSibling()
+			load_room_id = int(element.getAttribute("id"))
+			load_room_x = int(element.getAttribute("x"))
+			load_room_y = int(element.getAttribute("y"))
+
+			load_room_name = getText(element.getElementsByTagName("name")[0])
+			load_room_desc = getText(element.getElementsByTagName("description")[0])
+
 			roomList.append(Room(load_room_name, load_room_id, self))
 			roomList[id_room].desc = load_room_desc
 			roomList[id_room].x = load_room_x
@@ -103,20 +93,16 @@ class Main(QtGui.QMainWindow):
 		def readExitNode(element):
 			global id_exit
 			global exitList
-			load_exit_id = intFromQStr(element.attribute("id"))
-			load_exit_source = intFromQStr(element.attribute("source"))
-			load_exit_dest = intFromQStr(element.attribute("destination"))
-			load_exit_twoway = str(element.attribute("twoway"))
-			load_exit_name = load_exit_return = load_exit_alias = None
-			node = element.firstChild()
-			while not node.isNull():
-				if node.toElement().tagName() == "name":
-					load_exit_name = getText(node)
-				if node.toElement().tagName() == "return":
-					load_exit_return = getText(node)
-				elif node.toElement().tagName() == "alias":
-					load_exit_alias = getText(node)
-				node = node.nextSibling()
+			load_exit_id = int(element.getAttribute("id"))
+			load_exit_source = int(element.getAttribute("source"))
+			load_exit_dest = int(element.getAttribute("destination"))
+			load_exit_twoway = element.getAttribute("twoway")
+			load_exit_alias = []
+			load_exit_name = getText(element.getElementsByTagName("name")[0])
+			load_exit_return = getText(element.getElementsByTagName("return")[0])
+			for i in element.getElementsByTagName("alias"):
+				load_exit_alias.append(getText(i))
+
 			exitList.append(Exit(load_exit_name, load_exit_id, load_exit_source))
 			if load_exit_twoway == "True":
 				exitList[id_exit].twoWay = True
@@ -126,19 +112,19 @@ class Main(QtGui.QMainWindow):
 			self.ui.scene.addItem(exitList[id_exit].line)
 			id_exit = id_exit + 1
 
+		load_map_width =  int(element.getAttribute("width"))
+		load_map_height = int(element.getAttribute("height"))
+		load_map_bcolor = element.getAttribute("bcolor")
+		rooms = element.getElementsByTagName("room")
+		exits = element.getElementsByTagName("exit")
+		labels = element.getElementsByTagName("label")
+		for i in rooms:
+			readRoomNode(i)
+		for i in exits:
+			readExitNode(i)
+		for i in labels:
+			readLabelNode(i)
 
-		load_map_width = intFromQStr(element.attribute("width"))
-		load_map_height = intFromQStr(element.attribute("height"))
-		load_map_bcolor = str(element.attribute("bcolor"))
-		node = element.firstChild()
-		while not node.isNull():
-			if node.toElement().tagName() == "room":
-				readRoomNode(node.toElement())
-			elif node.toElement().tagName() == "exit":
-				readExitNode(node.toElement())
-			elif node.toElement().tagName() == "label":
-				readLabelNode(node.toElement())
-			node = node.nextSibling()
 		self.bColor = load_map_bcolor
 		self.ui.scene.setBackgroundBrush(QColor(load_map_bcolor))
 		self.resize(load_map_width, load_map_height)
@@ -146,7 +132,7 @@ class Main(QtGui.QMainWindow):
 		self.ui.menubar.setGeometry(QtCore.QRect(0, 0, load_map_width, load_map_height))
 		self.ui.scene.setSceneRect(0, 0, load_map_width, load_map_height - 14)
 
-	def populateFromDOM(self, dom):
+	def populateFromDOM(self, fname):
 		global roomList
 		global exitList
 		global labelList
@@ -160,45 +146,24 @@ class Main(QtGui.QMainWindow):
 		id_exit = 0
 		id_label = 0
 		self.ui.scene.clear()
-		root = dom.documentElement()
-		if root.tagName() != "DIGGER":
+		DOMTree = xml.dom.minidom.parse(str(fname))
+		root = DOMTree.documentElement
+		if root.tagName != "DIGGER":
 			raise ValueError, "not a Digger XML file"
-		node = root.firstChild()
-		while not node.isNull():
-			if node.toElement().tagName() == "map":
-				self.readMapNode(node.toElement())
-			node = node.nextSibling()
+		maps = root.getElementsByTagName("map")[0]
+		self.readMapNode(maps)
 		self.drawAll()
 
 	def openFile(self):
-		fname = QFileDialog.getOpenFileName(self, 'Open file', '/',"")
+		fname = QFileDialog.getOpenFileName(self, 'Open file', '/',"XML Files (*.xml)")
 		if fname:
-			dom = QtXml.QDomDocument()
-			error = None
-			fh = None
-			try:
-				fh = QFile(fname)
-				if not fh.open(QIODevice.ReadOnly):
-					raise IOError, unicode(fh.errorString())
-				if not dom.setContent(fh):
-					raise ValueError, "could not parse XML"
-			except (IOError, OSError, ValueError), e:
-				error = "Failed to import: %s" % e
-			finally:
-				if fh is not None:
-					fh.close()
-				if error is not None:
-					return False, error
-			try:
-				self.populateFromDOM(dom)
-				self.fileName = fname
-				self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
-			except ValueError, e:
-				return False, "Failed to import: %s" % e
+			self.populateFromDOM(fname)
+			self.fileName = fname
+			self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 
 
 	def saveFile(self):
-		fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "")
+		fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "XML Files (*.xml)")
 		if fname:
 			if self.isNewFile == 1:
 				self.fileName = fname
@@ -229,7 +194,7 @@ class Main(QtGui.QMainWindow):
 					stream << ("\t<label x='%d' y='%d'> " % (labelList[x].x, labelList[x].y))
 					stream << "\t\t" << Qt.escape(labelList[x].normalText)
 					stream << "\t</label>\n"
-				stream << "</map>\n"
+				stream << "</map>\n</DIGGER>"
 
 	def isRGB(self, number):
 		check = 1
