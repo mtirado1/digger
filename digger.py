@@ -81,7 +81,7 @@ class Main(QtGui.QMainWindow):
 
 			load_room_name = getText(element.getElementsByTagName("name")[0])
 			load_room_desc = ""
-			if element.getElementsByTagName("description")
+			if element.getElementsByTagName("description"):
 				load_room_desc = getText(element.getElementsByTagName("description")[0])
 
 			roomList.append(Room(load_room_name, load_room_id, self))
@@ -310,12 +310,26 @@ class Main(QtGui.QMainWindow):
 			labelList[j].box.setPos(labelList[j].x, labelList[j].y)
 
 	def digRoom(self, x_, y_):
+		global roomList
+		def findNewId():
+			returnId = 0
+			check = 1
+			while check:
+				for x in roomList:
+					if x.id == returnId:
+						returnId = returnId + 1
+						check = 1
+					else:
+						check = 0
+				if not roomList:
+					check = 0
+			return returnId
 		roomDialog = newRoom(self)
 		if roomDialog.exec_():
 			global roomList
 			global id_room
 			if roomDialog.le.text() != "":
-				roomList.append(Room(roomDialog.le.text(), id_room, self))
+				roomList.append(Room(roomDialog.le.text(), findNewId(), self))
 			roomList[id_room].x = x_
 			roomList[id_room].y = y_
 			self.ui.scene.addItem(roomList[id_room].box)

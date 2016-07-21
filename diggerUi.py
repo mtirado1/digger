@@ -73,7 +73,7 @@ class mapView(QtGui.QGraphicsView):
 		if check == 1:
 			global exitList
 			menu = QMenu()
-			actionViewDetails = menu.addAction("#" + str(objectClicked) + ": " + roomList[objectClicked].name)
+			actionViewDetails = menu.addAction("#" + str(roomList[objectClicked].id) + ": " + roomList[objectClicked].name)
 			actionEditRoom = menu.addAction("Edit Properties")
 			actionAddExit = menu.addAction("Add Exit")
 			exitMenu = menu.addMenu("Exits")
@@ -172,7 +172,7 @@ class Ui_MainWindow(object):
 
 		self.actionExport = QtGui.QAction(MainWindow)
 		self.actionExport.setObjectName(_fromUtf8("actionExport"))
-
+		self.actionExport.setShortcut("Ctrl+E")
 		self.actionNew = QtGui.QAction(MainWindow)
 		self.actionNew.setObjectName(_fromUtf8("actionNew"))
 		self.actionNew.setShortcut("Ctrl+N")
@@ -215,7 +215,7 @@ class Ui_MainWindow(object):
 		self.actionOptions.setText(_translate("MainWindow", "Options", None))
 		self.actionAbout.setText(_translate("MainWindow", "About", None))
 
-		self.actionExport.setText(_translate("MainWindow", "Export", None))
+		self.actionExport.setText(_translate("MainWindow", "&Export", None))
 		self.actionNew.setText(_translate("MainWindow", "&New", None))
 		self.actionOpen.setText(_translate("MainWindow", "&Open", None))
 		self.actionSave.setText(_translate("MainWindow", "&Save", None))

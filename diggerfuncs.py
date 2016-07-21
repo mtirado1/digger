@@ -161,7 +161,13 @@ class exportClass(QDialog):
 				if k.dest != -1:
 					strExport = strExport + "@link " + k.name + "=" + "[v(room_id" + str(k.dest) + ")]" + "\n"
 			else: # Two way exit
-				strExport = strExport + "@open " + k.name + "=" + "[v(room_id" + str(k.dest) + ")], " + k.returnName + "\n"
+				aliasString = ""
+				for x in k.alias:
+					aliasString = aliasString + ";" + x
+				returnAliasString = ""
+				for x in k.returnAlias:
+					returnAliasString = returnAliasString + ";" + x
+				strExport = strExport + "@open " + k.name + aliasString + "=" + "[v(room_id" + str(k.dest) + ")], " + k.returnName + returnAliasString + "\n"
 		for k in roomList:
 			strExport = strExport + "&room_id" + str(k.id) + " me\n"
 		self.browser.setText(strExport)
