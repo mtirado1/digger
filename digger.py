@@ -80,7 +80,9 @@ class Main(QtGui.QMainWindow):
 			load_room_y = int(element.getAttribute("y"))
 
 			load_room_name = getText(element.getElementsByTagName("name")[0])
-			load_room_desc = getText(element.getElementsByTagName("description")[0])
+			load_room_desc = ""
+			if element.getElementsByTagName("description")
+				load_room_desc = getText(element.getElementsByTagName("description")[0])
 
 			roomList.append(Room(load_room_name, load_room_id, self))
 			roomList[id_room].desc = load_room_desc
@@ -184,22 +186,23 @@ class Main(QtGui.QMainWindow):
 				global exitList
 				for iRoom in roomList:
 					stream << ("\t<room id='%d' x='%d' y='%d'>\n" % (iRoom.id, iRoom.x, iRoom.y))
-					stream << "\t\t<name> " << Qt.escape(iRoom.name) << " </name>\n"
-					stream << "\t\t<description> " << Qt.escape(iRoom.desc) << " </description>\n"
+					stream << "\t\t<name>" << Qt.escape(iRoom.name) << "</name>\n"
+					if iRoom.desc != "":
+						stream << "\t\t<description>" << Qt.escape(iRoom.desc) << "</description>\n"
 					stream << "\t</room>\n"
 				for iExit in exitList:
 					stream << ("\t<exit id='%d' source='%d' destination='%d' twoway='%s'>\n" % (iExit.id, iExit.source, iExit.dest, str(iExit.twoWay)))
-					stream << "\t\t<name> " << Qt.escape(iExit.name) << " </name>\n"
-					stream << "\t\t<return> " << Qt.escape(iExit.returnName) << " </return>\n"
+					stream << "\t\t<name>" << Qt.escape(iExit.name) << "</name>\n"
+					stream << "\t\t<return>" << Qt.escape(iExit.returnName) << "</return>\n"
 					for x in xrange(len(iExit.alias)):
 						stream << "\t\t<alias>" << Qt.escape(iExit.alias[x]) << "</alias>\n"
 					for x in xrange(len(iExit.returnAlias)):
-						stream << "\t\t<returnalias>" << Qt.escape(iExit.returnAlias[x]) << "</alias>\n"
+						stream << "\t\t<returnalias>" << Qt.escape(iExit.returnAlias[x]) << "</returnalias>\n"
 					stream << "\t</exit>\n"
 				for x in xrange(len(labelList)):
-					stream << ("\t<label x='%d' y='%d'> " % (labelList[x].x, labelList[x].y))
-					stream << "\t\t" << Qt.escape(labelList[x].normalText)
-					stream << "\t</label>\n"
+					stream << ("\t<label x='%d' y='%d'>" % (labelList[x].x, labelList[x].y))
+					stream << Qt.escape(labelList[x].normalText)
+					stream << "</label>\n"
 				stream << "</map>\n</DIGGER>"
 
 	def isRGB(self, number):
@@ -353,11 +356,11 @@ class Main(QtGui.QMainWindow):
 		if exitDialog.exec_():
 			global exitList
 			global id_exit
-			exitList.append(Exit(exitDialog.le.text(), id_exit, exitDialog.rDict[exitDialog.combo3.currentText()]))
+			exitList.append(Exit(exitDialog.le.text(), id_exit, exitDialog.rDict[str(exitDialog.combo3.currentText())]))
 			if exitDialog.checkBox.isChecked():
 				exitList[id_exit].twoWay = True
 				exitList[id_exit].returnName = exitDialog.le2.text()
-			exitList[id_exit].dest = exitDialog.rDict[exitDialog.combo4.currentText()]
+			exitList[id_exit].dest = exitDialog.rDict[str(exitDialog.combo4.currentText())]
 			self.ui.scene.addItem(exitList[id_exit].line)
 			self.drawAll()
 			id_exit = id_exit + 1
@@ -377,6 +380,27 @@ class Main(QtGui.QMainWindow):
 				exitList[id_exit].returnName = exitDialog.le2.text()
 			self.drawAll()
 		id_exit = id_exit + 1
+		
+	def editExitProperties(self, index):
+		editDialog = editExit()
+		editDialog.setData(index)
+		editDialog.fillData(index)
+		if editDialog.exec_():
+			global exitList
+			exitList[index].name = editDialog.le.text()
+			exitList[index].returnName = editDialog.le2.text()
+			if editDialog.checkBox.isChecked():
+				exitList[index].twoWay = True
+			else:
+				exitList[index].twoWay = False
+			exitList[index].dest = editDialog.rDict[str(editDialog.combo4.currentText())]
+			exitList[index].source = editDialog.rDict[str(editDialog.combo3.currentText())]
+			exitList[index].alias = []
+			exitList[index].returnAlias = []
+			for x in xrange(editDialog.list1.count()):
+				exitList[index].alias.append(editDialog.list1.item(x).text())
+			for x in xrange(editDialog.list2.count()):
+				exitList[index].returnAlias.append(editDialog.list2.item(x).text())
 
 	def addLabel(self, x_, y_):
 		labelDialog = addLabel()

@@ -111,8 +111,7 @@ class mapView(QtGui.QGraphicsView):
 			else:
 				for k in xrange(len(actionExitList)):
 					if action == actionExitList[k]:
-						#self.parent().parent().editExitProperties() TODO
-						pass
+						self.parent().parent().editExitProperties(actionExitId[k])
 						break
 		#User clicked on a label
 		elif check == 2:

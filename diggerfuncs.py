@@ -314,6 +314,111 @@ class newExit(QDialog):
 			self.combo3.addItem("#" + str(i.id) + ": " + i.name)
 			self.combo4.addItem("#" + str(i.id) + ": " + i.name)
 
+
+class aliasList(QListWidget):
+	def __init__(self, parent = None):
+		super(aliasList, self).__init__(parent)
+		self.resize(300,120)
+		pass
+	def contextMenuEvent(self, event):
+		menu = QMenu()
+		items = self.selectedItems()
+		actionAddAlias = menu.addAction("Add Alias")
+		if len(items) > 0:
+			actionDeleteAlias = menu.addAction("Delete")
+			item = items[0].text()
+		action = menu.exec_(event.globalPos())
+		if action == actionAddAlias:
+			alias, ok = QInputDialog.getText(self, "Add Alias", "Alias:")
+			if ok:
+				self.addItem(alias)
+		elif len(items) > 0:
+			if action == actionDeleteAlias:
+				self.takeItem(self.currentRow())
+
+class editExit(QDialog):
+	def __init__(self, parent = None):
+		super(editExit, self).__init__(parent)
+		
+		self.tabNames = QWidget()
+		self.tabAlias = QWidget()
+		self.btn1 = QPushButton("Ok")
+		self.btn1.clicked.connect(self.accept)
+		self.tab = QTabWidget()
+		self.tab.addTab(self.tabNames, "Name")
+		self.tab.addTab(self.tabAlias, "Alias")
+
+		tabLayout = QFormLayout()
+		tabLayout.addRow(self.tab)
+		tabLayout.addRow(self.btn1)
+		self.setLayout(tabLayout)
+		
+		layout = QFormLayout()
+		self.rDict = {}
+		self.lbl = QLabel("Name")
+		self.le = QLineEdit()
+		self.lbl2 = QLabel("Return name")
+		self.le2 = QLineEdit()
+		self.checkBox = QRadioButton(self)
+		self.boxLbl = QLabel("Two way exit")
+		self.lbl3 = QLabel("Source")
+		self.combo3 = QComboBox()
+		self.setWindowTitle("Edit Exit Properties")
+
+		self.lbl4 = QLabel("Destination")
+		self.combo4 = QComboBox()
+		self.hbox = QHBoxLayout()
+		self.hbox.addWidget(self.checkBox)
+		self.hbox.addWidget(self.boxLbl)
+		self.hbox.addStretch()
+		layout.addRow(self.lbl,self.le)
+		layout.addRow(self.lbl2, self.le2)
+		layout.addRow(self.hbox)
+		layout.addRow(self.lbl3, self.combo3)
+		layout.addRow(self.lbl4, self.combo4)
+		self.tabNames.setLayout(layout)
+		
+		layout2 = QFormLayout()
+		self.list1 = aliasList()
+		self.list2 = aliasList()
+		self.lblList1 = QLabel("Source exit")
+		self.lblList2 = QLabel("Destination exit")
+		layout2.addRow(self.lblList1, self.lblList2)
+		layout2.addRow(self.list1, self.list2)
+		self.tabAlias.setLayout(layout2)
+
+		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
+		self.checkBox.toggled.connect(self.ButtonHide)
+		self.checkBox.toggle()
+	def ButtonHide(self, state):
+		if self.checkBox.isChecked():
+			self.le2.setEnabled(True)
+			self.list2.setEnabled(True)
+		else:
+			self.le2.setEnabled(False)
+			self.list2.setEnabled(False)
+	def setData(self, exit):
+		global exitList
+		self.combo4.addItem("#-1: No destination")
+		self.rDict["#-1: No destination"] = -1
+		for i in roomList:
+			self.rDict["#" + str(i.id) + ": " + i.name] = i.id
+			self.combo3.addItem("#" + str(i.id) + ": " + i.name)
+			self.combo4.addItem("#" + str(i.id) + ": " + i.name)
+	def fillData(self, exit):
+		self.le.setText(exitList[exit].name)
+		self.combo3.setCurrentIndex(self.combo3.findText("#" + str(exitList[exit].source) + ": " + roomList[exitList[exit].source].name))
+		self.combo4.setCurrentIndex(self.combo4.findText("#" + str(exitList[exit].dest) + ": " + roomList[exitList[exit].dest].name))
+		if exitList[exit].twoWay == False:
+			self.checkBox.toggle()
+			self.list2.setEnabled(False)
+			self.le2.setEnabled(False)
+		else:
+			self.le2.setText(exitList[exit].returnName)
+		for x in exitList[exit].alias:
+			self.list1.addItem(x)
+		for x in exitList[exit].returnAlias:
+			self.list2.addItem(x)
 class addLabel(QDialog):
 	def __init__(self, parent = None):
 		super(addLabel, self).__init__(parent)
