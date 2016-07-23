@@ -85,7 +85,7 @@ class Main(QtGui.QMainWindow):
 				load_room_desc = getText(element.getElementsByTagName("description")[0])
 
 			roomList.append(Room(load_room_name, load_room_id, self))
-			roomList[id_room].desc = load_room_desc
+			roomList[id_room].desc = mushUnEscape(load_room_desc)
 			roomList[id_room].x = load_room_x
 			roomList[id_room].y = load_room_y
 			self.ui.scene.addItem(roomList[id_room].box)
@@ -103,6 +103,12 @@ class Main(QtGui.QMainWindow):
 			load_exit_returnAlias = []
 			load_exit_name = getText(element.getElementsByTagName("name")[0])
 			load_exit_return = getText(element.getElementsByTagName("return")[0])
+			load_exit_desc = ""
+			load_exit_returnDesc = ""
+			if element.getElementsByTagName("description"):
+				load_exit_desc = getText(element.getElementsByTagName("description")[0])
+			if element.getElementsByTagName("returndescription"):
+				load_exit_returnDesc = getText(element.getElementsByTagName("returndescription")[0])
 			for i in element.getElementsByTagName("alias"):
 				load_exit_alias.append(getText(i))
 			for i in element.getElementsByTagName("returnalias"):
@@ -115,6 +121,8 @@ class Main(QtGui.QMainWindow):
 			exitList[id_exit].alias = load_exit_alias
 			exitList[id_exit].returnAlias = load_exit_returnAlias
 			exitList[id_exit].dest = load_exit_dest
+			exitList[-1].desc = mushUnEscape(load_exit_desc)
+			exitList[-1].returnDesc = mushUnEscape(load_exit_returnDesc)
 			self.ui.scene.addItem(exitList[id_exit].line)
 			id_exit = id_exit + 1
 
@@ -188,12 +196,16 @@ class Main(QtGui.QMainWindow):
 					stream << ("\t<room id='%d' x='%d' y='%d'>\n" % (iRoom.id, iRoom.x, iRoom.y))
 					stream << "\t\t<name>" << Qt.escape(iRoom.name) << "</name>\n"
 					if iRoom.desc != "":
-						stream << "\t\t<description>" << Qt.escape(iRoom.desc) << "</description>\n"
+						stream << "\t\t<description>" << mushEscape(Qt.escape(iRoom.desc)) << "</description>\n"
 					stream << "\t</room>\n"
 				for iExit in exitList:
 					stream << ("\t<exit id='%d' source='%d' destination='%d' twoway='%s'>\n" % (iExit.id, iExit.source, iExit.dest, str(iExit.twoWay)))
 					stream << "\t\t<name>" << Qt.escape(iExit.name) << "</name>\n"
 					stream << "\t\t<return>" << Qt.escape(iExit.returnName) << "</return>\n"
+					if iExit.desc != "":
+						stream <<"\t\t<description>" << mushEscape(Qt.escape(iExit.desc)) << "</description>\n"
+					if iExit.returnDesc != "":
+						stream <<"\t\t<returndescription>" << mushEscape(Qt.escape(iExit.returnDesc)) << "</returndescription>\n"
 					for x in xrange(len(iExit.alias)):
 						stream << "\t\t<alias>" << Qt.escape(iExit.alias[x]) << "</alias>\n"
 					for x in xrange(len(iExit.returnAlias)):
@@ -311,25 +323,12 @@ class Main(QtGui.QMainWindow):
 
 	def digRoom(self, x_, y_):
 		global roomList
-		def findNewId():
-			returnId = 0
-			check = 1
-			while check:
-				for x in roomList:
-					if x.id == returnId:
-						returnId = returnId + 1
-						check = 1
-					else:
-						check = 0
-				if not roomList:
-					check = 0
-			return returnId
 		roomDialog = newRoom(self)
 		if roomDialog.exec_():
 			global roomList
 			global id_room
 			if roomDialog.le.text() != "":
-				roomList.append(Room(roomDialog.le.text(), findNewId(), self))
+				roomList.append(Room(roomDialog.le.text(), findNewId(roomList), self))
 			roomList[id_room].x = x_
 			roomList[id_room].y = y_
 			self.ui.scene.addItem(roomList[id_room].box)
@@ -365,7 +364,8 @@ class Main(QtGui.QMainWindow):
 		self.drawAll()
 
 	def openExit(self):
-		exitDialog = newExit(self)
+		exitDialog = editExit(self)
+		exitDialog.setWindowTitle("New Exit")
 		exitDialog.setData()
 		if exitDialog.exec_():
 			global exitList
@@ -375,6 +375,12 @@ class Main(QtGui.QMainWindow):
 				exitList[id_exit].twoWay = True
 				exitList[id_exit].returnName = exitDialog.le2.text()
 			exitList[id_exit].dest = exitDialog.rDict[str(exitDialog.combo4.currentText())]
+			exitList[-1].desc = exitDialog.te1.toPlainText()
+			exitList[-1].returnDesc = exitDialog.te2.toPlainText()
+			for x in xrange(exitDialog.list1.count()):
+				exitList[-1].alias.append(exitDialog.list1.item(x).text())
+			for x in xrange(exitDialog.list2.count()):
+				exitList[-1].returnAlias.append(exitDialog.list2.item(x).text())
 			self.ui.scene.addItem(exitList[id_exit].line)
 			self.drawAll()
 			id_exit = id_exit + 1
@@ -394,10 +400,10 @@ class Main(QtGui.QMainWindow):
 				exitList[id_exit].returnName = exitDialog.le2.text()
 			self.drawAll()
 		id_exit = id_exit + 1
-		
+
 	def editExitProperties(self, index):
 		editDialog = editExit()
-		editDialog.setData(index)
+		editDialog.setData()
 		editDialog.fillData(index)
 		if editDialog.exec_():
 			global exitList
@@ -409,6 +415,8 @@ class Main(QtGui.QMainWindow):
 				exitList[index].twoWay = False
 			exitList[index].dest = editDialog.rDict[str(editDialog.combo4.currentText())]
 			exitList[index].source = editDialog.rDict[str(editDialog.combo3.currentText())]
+			exitList[index].desc = editDialog.te1.toPlainText()
+			exitList[index].returnDesc = editDialog.te2.toPlainText()
 			exitList[index].alias = []
 			exitList[index].returnAlias = []
 			for x in xrange(editDialog.list1.count()):

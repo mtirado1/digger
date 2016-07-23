@@ -97,9 +97,9 @@ class mapView(QtGui.QGraphicsView):
 				editDialog.setData(objectClicked)
 				if editDialog.exec_():
 					roomList[objectClicked].name=editDialog.le.text()
-					roomList[objectClicked].desc=editDialog.le2.text()
-					roomList[objectClicked].x=int(editDialog.le3.text())
-					roomList[objectClicked].y=int(editDialog.le4.text())
+					roomList[objectClicked].desc=editDialog.te.toPlainText()
+					roomList[objectClicked].x=int(editDialog.le2.text())
+					roomList[objectClicked].y=int(editDialog.le3.text())
 					self.parent().parent().drawAll()
 					editDialog.close()
 			elif action == actionAddExit:
