@@ -8,7 +8,7 @@ from xml.dom.minidom import parse
 from PyQt4 import QtCore, QtGui
 from diggerUi import *
 import platform
-__version__ = "1.0.0"
+
 
 
 try:
@@ -39,6 +39,7 @@ class Main(QtGui.QMainWindow):
 		self.ui.actionOpen.triggered.connect(self.openFile)
 		self.ui.actionSave.triggered.connect(self.saveFile)
 		self.ui.actionToggleText.triggered.connect(self.toggleText)
+		self.ui.actionSaveAs.triggered.connect(self.saveFileAs)
 		self.isNewFile = 1
 		self.fileName = "Untitled"
 		self.bColor = "#FFFFFF"
@@ -98,31 +99,17 @@ class Main(QtGui.QMainWindow):
 			load_exit_id = int(element.getAttribute("id"))
 			load_exit_source = int(element.getAttribute("source"))
 			load_exit_dest = int(element.getAttribute("destination"))
-			load_exit_twoway = element.getAttribute("twoway")
 			load_exit_alias = []
-			load_exit_returnAlias = []
 			load_exit_name = getText(element.getElementsByTagName("name")[0])
-			load_exit_return = getText(element.getElementsByTagName("return")[0])
 			load_exit_desc = ""
-			load_exit_returnDesc = ""
 			if element.getElementsByTagName("description"):
 				load_exit_desc = getText(element.getElementsByTagName("description")[0])
-			if element.getElementsByTagName("returndescription"):
-				load_exit_returnDesc = getText(element.getElementsByTagName("returndescription")[0])
 			for i in element.getElementsByTagName("alias"):
 				load_exit_alias.append(getText(i))
-			for i in element.getElementsByTagName("returnalias"):
-				load_exit_returnAlias.append(getText(i))
-
 			exitList.append(Exit(load_exit_name, load_exit_id, load_exit_source))
-			if load_exit_twoway == "True":
-				exitList[id_exit].twoWay = True
-				exitList[id_exit].returnName = load_exit_return
 			exitList[id_exit].alias = load_exit_alias
-			exitList[id_exit].returnAlias = load_exit_returnAlias
 			exitList[id_exit].dest = load_exit_dest
 			exitList[-1].desc = mushUnEscape(load_exit_desc)
-			exitList[-1].returnDesc = mushUnEscape(load_exit_returnDesc)
 			self.ui.scene.addItem(exitList[id_exit].line)
 			id_exit = id_exit + 1
 
@@ -174,48 +161,28 @@ class Main(QtGui.QMainWindow):
 			self.populateFromDOM(fname)
 			self.fileName = fname
 			self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
+			self.isNewFile = 0
 
 
 	def saveFile(self):
-		fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "XML Files (*.xml)")
-		if fname:
-			if self.isNewFile == 1:
+		if self.isNewFile == 1:
+			fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "XML Files (*.xml)")
+			if fname:
 				self.fileName = fname
 				self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 				self.isNewFile = 0
-				fsave = QFile(fname)
-				if not fsave.open(QIODevice.WriteOnly):
-					raise IOError, unicode(fsave.errorString())
-				stream = QTextStream(fsave)
-				stream.setCodec("UTF-8")
-				stream << ("<?xml version='1.0' encoding='UTF-8'?>\n" + "<!DOCTYPE DIGGER>\n" + "<DIGGER VERSION='%s'>\n" % (__version__))
-				stream << ("<map width='%d' height='%d' bcolor='%s'>\n" % (self.ui.graphicsView.width(), self.ui.graphicsView.height(), self.bColor))
-				global roomList
-				global exitList
-				for iRoom in roomList:
-					stream << ("\t<room id='%d' x='%d' y='%d'>\n" % (iRoom.id, iRoom.x, iRoom.y))
-					stream << "\t\t<name>" << Qt.escape(iRoom.name) << "</name>\n"
-					if iRoom.desc != "":
-						stream << "\t\t<description>" << mushEscape(Qt.escape(iRoom.desc)) << "</description>\n"
-					stream << "\t</room>\n"
-				for iExit in exitList:
-					stream << ("\t<exit id='%d' source='%d' destination='%d' twoway='%s'>\n" % (iExit.id, iExit.source, iExit.dest, str(iExit.twoWay)))
-					stream << "\t\t<name>" << Qt.escape(iExit.name) << "</name>\n"
-					stream << "\t\t<return>" << Qt.escape(iExit.returnName) << "</return>\n"
-					if iExit.desc != "":
-						stream <<"\t\t<description>" << mushEscape(Qt.escape(iExit.desc)) << "</description>\n"
-					if iExit.returnDesc != "":
-						stream <<"\t\t<returndescription>" << mushEscape(Qt.escape(iExit.returnDesc)) << "</returndescription>\n"
-					for x in xrange(len(iExit.alias)):
-						stream << "\t\t<alias>" << Qt.escape(iExit.alias[x]) << "</alias>\n"
-					for x in xrange(len(iExit.returnAlias)):
-						stream << "\t\t<returnalias>" << Qt.escape(iExit.returnAlias[x]) << "</returnalias>\n"
-					stream << "\t</exit>\n"
-				for x in xrange(len(labelList)):
-					stream << ("\t<label x='%d' y='%d'>" % (labelList[x].x, labelList[x].y))
-					stream << Qt.escape(labelList[x].normalText)
-					stream << "</label>\n"
-				stream << "</map>\n</DIGGER>"
+				saveToFile(fname, self)
+		else:
+			fname = self.fileName
+			saveToFile(fname, self)
+	def saveFileAs(self):
+		fname = QFileDialog.getSaveFileName(self, 'Save As', '/', "XML Files (*.xml)")
+		if fname:
+			self.fileName = fname
+			self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
+			saveToFile(fname, self)
+			self.isNewFile = 0
+
 
 	def isRGB(self, number):
 		check = 1
@@ -303,8 +270,6 @@ class Main(QtGui.QMainWindow):
 			for k in xrange(len(exitList)):
 				if exitList[k].source == roomList[j].id:
 					roomString = roomString + exitList[k].name + "<br />"
-				if exitList[k].dest == roomList[j].id and exitList[k].twoWay:
-					roomString = roomString + exitList[k].returnName + "<br />"
 			if self.ui.actionToggleText.isChecked():
 				roomList[j].text.setHtml(roomString + "</p>")
 			else:
@@ -370,17 +335,11 @@ class Main(QtGui.QMainWindow):
 		if exitDialog.exec_():
 			global exitList
 			global id_exit
-			exitList.append(Exit(exitDialog.le.text(), id_exit, exitDialog.rDict[str(exitDialog.combo3.currentText())]))
-			if exitDialog.checkBox.isChecked():
-				exitList[id_exit].twoWay = True
-				exitList[id_exit].returnName = exitDialog.le2.text()
-			exitList[id_exit].dest = exitDialog.rDict[str(exitDialog.combo4.currentText())]
+			exitList.append(Exit(exitDialog.le.text(), id_exit, exitDialog.rDict[str(exitDialog.combo1.currentText())]))
+			exitList[id_exit].dest = exitDialog.rDict[str(exitDialog.combo2.currentText())]
 			exitList[-1].desc = exitDialog.te1.toPlainText()
-			exitList[-1].returnDesc = exitDialog.te2.toPlainText()
 			for x in xrange(exitDialog.list1.count()):
 				exitList[-1].alias.append(exitDialog.list1.item(x).text())
-			for x in xrange(exitDialog.list2.count()):
-				exitList[-1].returnAlias.append(exitDialog.list2.item(x).text())
 			self.ui.scene.addItem(exitList[id_exit].line)
 			self.drawAll()
 			id_exit = id_exit + 1
@@ -389,16 +348,20 @@ class Main(QtGui.QMainWindow):
 		global id_exit
 		global roomList
 		global exitList
-		exitList.append(Exit("##placeholder##", id_exit, roomList[source].id)) # User will be asked for name soon
+		exitList.append(Exit("##placeholder##", findNewId(exitList), roomList[source].id)) # User will be asked for name soon
 		exitList[id_exit].dest = destination
 		self.ui.scene.addItem(exitList[id_exit].line)
 		exitDialog = newExitName()
 		if exitDialog.exec_():
 			exitList[id_exit].name = exitDialog.le.text()
 			if exitDialog.checkBox.isChecked():
-				exitList[id_exit].twoWay = True
-				exitList[id_exit].returnName = exitDialog.le2.text()
-			self.drawAll()
+				exitList.append(Exit(exitDialog.le2.text(), id_exit, roomList[destination].id))
+				exitList[-1].dest = source
+				self.ui.scene.addItem(exitList[-1].line)
+		else:
+			self.ui.scene.removeItem(exitList[-1])
+			del exitList[-1]
+		self.drawAll()
 		id_exit = id_exit + 1
 
 	def editExitProperties(self, index):
@@ -408,21 +371,12 @@ class Main(QtGui.QMainWindow):
 		if editDialog.exec_():
 			global exitList
 			exitList[index].name = editDialog.le.text()
-			exitList[index].returnName = editDialog.le2.text()
-			if editDialog.checkBox.isChecked():
-				exitList[index].twoWay = True
-			else:
-				exitList[index].twoWay = False
-			exitList[index].dest = editDialog.rDict[str(editDialog.combo4.currentText())]
-			exitList[index].source = editDialog.rDict[str(editDialog.combo3.currentText())]
+			exitList[index].source = editDialog.rDict[str(editDialog.combo1.currentText())]
+			exitList[index].dest = editDialog.rDict[str(editDialog.combo2.currentText())]
 			exitList[index].desc = editDialog.te1.toPlainText()
-			exitList[index].returnDesc = editDialog.te2.toPlainText()
 			exitList[index].alias = []
-			exitList[index].returnAlias = []
 			for x in xrange(editDialog.list1.count()):
 				exitList[index].alias.append(editDialog.list1.item(x).text())
-			for x in xrange(editDialog.list2.count()):
-				exitList[index].returnAlias.append(editDialog.list2.item(x).text())
 
 	def addLabel(self, x_, y_):
 		labelDialog = addLabel()

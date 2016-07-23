@@ -86,10 +86,6 @@ class mapView(QtGui.QGraphicsView):
 					menuEnabled = True
 					actionExitId.append(f)
 					actionExitList.append(exitMenu.addAction(exitList[f].name))
-				if exitList[f].twoWay and exitList[f].dest == roomList[objectClicked].id:
-					menuEnabled = True
-					actionExitId.append(f)
-					actionExitList.append(exitMenu.addAction(exitList[f].returnName))
 			exitMenu.setEnabled(menuEnabled)
 			action = menu.exec_(event.globalPos())
 			if action == actionEditRoom:
@@ -182,6 +178,9 @@ class Ui_MainWindow(object):
 		self.actionSave = QtGui.QAction(MainWindow)
 		self.actionSave.setObjectName(_fromUtf8("actionSave"))
 		self.actionSave.setShortcut("Ctrl+S")
+		self.actionSaveAs = QtGui.QAction(MainWindow)
+		self.actionSaveAs.setObjectName(_fromUtf8("actionSaveAs"))
+		self.actionSaveAs.setShortcut("Ctrl+Shift+S")
 		self.actionToggleText = QtGui.QAction(MainWindow, checkable=True)
 		self.actionToggleText.setChecked(True)
 		self.actionSave.setObjectName(_fromUtf8("actionToggleText"))
@@ -190,6 +189,8 @@ class Ui_MainWindow(object):
 		self.menuFile.addAction(self.actionOpen)
 		self.menuFile.addSeparator()
 		self.menuFile.addAction(self.actionSave)
+		self.menuFile.addAction(self.actionSaveAs)
+		self.menuFile.addSeparator()
 		self.menuFile.addAction(self.actionExport)
 
 		self.menuView.addAction(self.actionToggleText)
@@ -219,4 +220,5 @@ class Ui_MainWindow(object):
 		self.actionNew.setText(_translate("MainWindow", "&New", None))
 		self.actionOpen.setText(_translate("MainWindow", "&Open", None))
 		self.actionSave.setText(_translate("MainWindow", "&Save", None))
+		self.actionSaveAs.setText(_translate("MainWindow", "Save As", None))
 		self.actionToggleText.setText(_translate("MainWindow", "Show details", None))

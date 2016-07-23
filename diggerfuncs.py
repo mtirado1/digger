@@ -2,7 +2,7 @@ import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-
+__version__ = "1.1.0"
 
 #######################################
 # Some constants
@@ -80,6 +80,36 @@ def findNewId(lst):
 			check = 0
 	return returnId
 
+def saveToFile(fname, parent):
+	fsave = QFile(fname)
+	if not fsave.open(QIODevice.WriteOnly):
+		raise IOError, unicode(fsave.errorString())
+	stream = QTextStream(fsave)
+	stream.setCodec("UTF-8")
+	stream << ("<?xml version='1.0' encoding='UTF-8'?>\n" + "<!DOCTYPE DIGGER>\n" + "<DIGGER VERSION='%s'>\n" % (__version__))
+	stream << ("<map width='%d' height='%d' bcolor='%s'>\n" % (parent.ui.graphicsView.width(), parent.ui.graphicsView.height(), parent.bColor))
+	global roomList
+	global exitList
+	for iRoom in roomList:
+		stream << ("\t<room id='%d' x='%d' y='%d'>\n" % (iRoom.id, iRoom.x, iRoom.y))
+		stream << "\t\t<name>" << Qt.escape(iRoom.name) << "</name>\n"
+		if iRoom.desc != "":
+			stream << "\t\t<description>" << mushEscape(Qt.escape(iRoom.desc)) << "</description>\n"
+		stream << "\t</room>\n"
+	for iExit in exitList:
+		stream << ("\t<exit id='%d' source='%d' destination='%d'>\n" % (iExit.id, iExit.source, iExit.dest))
+		stream << "\t\t<name>" << Qt.escape(iExit.name) << "</name>\n"
+		if iExit.desc != "":
+			stream <<"\t\t<description>" << mushEscape(Qt.escape(iExit.desc)) << "</description>\n"
+		for x in xrange(len(iExit.alias)):
+			stream << "\t\t<alias>" << Qt.escape(iExit.alias[x]) << "</alias>\n"
+		stream << "\t</exit>\n"
+	for x in xrange(len(labelList)):
+		stream << ("\t<label x='%d' y='%d'>" % (labelList[x].x, labelList[x].y))
+		stream << Qt.escape(labelList[x].normalText)
+		stream << "</label>\n"
+	stream << "</map>\n</DIGGER>"
+
 class labelBox(QGraphicsRectItem):
 	def __init__(self, parent = None):
 		super(labelBox, self).__init__(parent)
@@ -145,13 +175,9 @@ class Exit:
 	type='exit'
 	def __init__(self, name, id_, source):
 		self.id = id_
-		self.twoWay = False
 		self.name = name
-		self.returnName = ""
 		self.alias = []
-		self.returnAlias = []
 		self.desc = ""
-		self.returnDesc = ""
 		self.source = source
 		self.dest = -1
 		self.line = QGraphicsLineItem()
@@ -201,27 +227,14 @@ class exportClass(QDialog):
 			strExport = strExport + "@set me=room_id" + str(k.id) + ":[loc(me)]" + "\n"
 		for k in exitList:
 			strExport = strExport + "@tel [v(room_id" + str(k.source) + ")]" + "\n"
-			if k.twoWay == False:
-				aliasString = ""
-				for x in k.alias:
-					aliasString = aliasString + ";" + x
-				strExport = strExport + "@open " + k.name + aliasString + "\n"
-				if k.desc != "":
-					strExport = strExport + "@desc " + k.name + "=" + mushEscape(str(k.desc)) + "\n"
-				if k.dest != -1:
-					strExport = strExport + "@link " + k.name + "=" + "[v(room_id" + str(k.dest) + ")]" + "\n"
-			else: # Two way exit
-				aliasString = ""
-				for x in k.alias:
-					aliasString = aliasString + ";" + x
-				returnAliasString = ""
-				for x in k.returnAlias:
-					returnAliasString = returnAliasString + ";" + x
-				strExport = strExport + "@open " + k.name + aliasString + "=" + "[v(room_id" + str(k.dest) + ")], " + k.returnName + returnAliasString + "\n"
-				if k.desc != "":
-					strExport = strExport + "@desc " + k.name + "=" + mushEscape(str(k.desc)) + "\n"
-				if k.returnDesc != "":
-					strExport = strExport + k.name + "\n@desc " + k.returnName + "=" + k.returnDesc + "\n"
+			aliasString = ""
+			for x in k.alias:
+				aliasString = aliasString + ";" + x
+			strExport = strExport + "@open " + k.name + aliasString + "\n"
+			if k.desc != "":
+				strExport = strExport + "@desc " + k.name + "=" + mushEscape(str(k.desc)) + "\n"
+			if k.dest != -1:
+				strExport = strExport + "@link " + k.name + "=" + "[v(room_id" + str(k.dest) + ")]" + "\n"
 		for k in roomList:
 			strExport = strExport + "&room_id" + str(k.id) + " me\n"
 		self.browser.setText(strExport)
@@ -387,80 +400,47 @@ class editExit(QDialog):
 		layout = QFormLayout()
 		self.lbl = QLabel("Name")
 		self.le = QLineEdit()
-		self.lbl2 = QLabel("Return name")
-		self.le2 = QLineEdit()
-		self.checkBox = QRadioButton(self)
-		self.boxLbl = QLabel("Two way exit")
-		self.lbl3 = QLabel("Source")
-		self.combo3 = QComboBox()
-		self.lbl4 = QLabel("Destination")
-		self.combo4 = QComboBox()
-		self.hbox = QHBoxLayout()
-		self.hbox.addWidget(self.checkBox)
-		self.hbox.addWidget(self.boxLbl)
-		self.hbox.addStretch()
+		self.lbl2 = QLabel("Source")
+		self.combo1 = QComboBox()
+		self.lbl3 = QLabel("Destination")
+		self.combo2 = QComboBox()
 		layout.addRow(self.lbl,self.le)
-		layout.addRow(self.lbl2, self.le2)
-		layout.addRow(self.hbox)
-		layout.addRow(self.lbl3, self.combo3)
-		layout.addRow(self.lbl4, self.combo4)
+		layout.addRow(self.lbl2, self.combo1)
+		layout.addRow(self.lbl3, self.combo2)
 		self.tabNames.setLayout(layout)
 
 		layout2 = QFormLayout()
 		self.list1 = aliasList()
-		self.list2 = aliasList()
-		self.lblList1 = QLabel("Source exit")
-		self.lblList2 = QLabel("Destination exit")
-		layout2.addRow(self.lblList1, self.lblList2)
-		layout2.addRow(self.list1, self.list2)
+		self.lblList1 = QLabel("Alias list")
+		layout2.addRow(self.lblList1)
+		layout2.addRow(self.list1)
 		self.tabAlias.setLayout(layout2)
 
 		layout3 = QFormLayout()
 		self.te1 = QTextEdit()
-		self.te2 = QTextEdit()
-		self.lblDesc1 = QLabel("Source description")
-		self.lblDesc2 = QLabel("Destination description")
-		layout3.addRow(self.lblDesc1, self.lblDesc2)
-		layout3.addRow(self.te1, self.te2)
+		self.lblDesc1 = QLabel("Exit description")
+		layout3.addRow(self.lblDesc1)
+		layout3.addRow(self.te1)
 		self.tabDesc.setLayout(layout3)
 
-		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
-		self.checkBox.toggled.connect(self.ButtonHide)
-		self.checkBox.toggle()
-	def ButtonHide(self, state):
-		if self.checkBox.isChecked():
-			self.le2.setEnabled(True)
-			self.list2.setEnabled(True)
-			self.te2.setEnabled(True)
-		else:
-			self.le2.setEnabled(False)
-			self.list2.setEnabled(False)
-			self.te2.setEnabled(False)
+		self.btn1.clicked.connect(self.accept)
+
 	def setData(self):
 		global exitList
-		self.combo4.addItem("#-1: No destination")
+		self.combo2.addItem("#-1: No destination")
 		self.rDict["#-1: No destination"] = -1
 		for i in roomList:
 			self.rDict[str("#" + str(i.id) + ": " + i.name)] = i.id
-			self.combo3.addItem("#" + str(i.id) + ": " + i.name)
-			self.combo4.addItem("#" + str(i.id) + ": " + i.name)
+			self.combo1.addItem("#" + str(i.id) + ": " + i.name)
+			self.combo2.addItem("#" + str(i.id) + ": " + i.name)
 	def fillData(self, exit):
 		self.le.setText(exitList[exit].name)
-		self.combo3.setCurrentIndex(self.combo3.findText("#" + str(exitList[exit].source) + ": " + roomList[exitList[exit].source].name))
-		self.combo4.setCurrentIndex(self.combo4.findText("#" + str(exitList[exit].dest) + ": " + roomList[exitList[exit].dest].name))
+		self.combo1.setCurrentIndex(self.combo1.findText("#" + str(exitList[exit].source) + ": " + roomList[exitList[exit].source].name))
+		self.combo2.setCurrentIndex(self.combo2.findText("#" + str(exitList[exit].dest) + ": " + roomList[exitList[exit].dest].name))
 		self.te1.setPlainText(exitList[exit].desc)
-		self.te2.setPlainText(exitList[exit].returnDesc)
-		if exitList[exit].twoWay == False:
-			self.checkBox.toggle()
-			self.list2.setEnabled(False)
-			self.le2.setEnabled(False)
-			self.te2.setEnabled(False)
-		else:
-			self.le2.setText(exitList[exit].returnName)
 		for x in exitList[exit].alias:
 			self.list1.addItem(x)
-		for x in exitList[exit].returnAlias:
-			self.list2.addItem(x)
+
 class addLabel(QDialog):
 	def __init__(self, parent = None):
 		super(addLabel, self).__init__(parent)
