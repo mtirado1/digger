@@ -7,6 +7,7 @@ import xml.dom.minidom
 from xml.dom.minidom import parse
 from PyQt4 import QtCore, QtGui
 from diggerUi import *
+from diggerfuncs import __version__
 import platform
 
 
@@ -43,6 +44,7 @@ class Main(QtGui.QMainWindow):
 		self.isNewFile = 1
 		self.fileName = "Untitled"
 		self.bColor = "#FFFFFF"
+		self.roomBColor = "#FF0000"
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 
 	def resizeEvent(self, event):
@@ -79,16 +81,17 @@ class Main(QtGui.QMainWindow):
 			load_room_id = int(element.getAttribute("id"))
 			load_room_x = int(element.getAttribute("x"))
 			load_room_y = int(element.getAttribute("y"))
-
+			load_room_bcolor = element.getAttribute("bcolor")
 			load_room_name = getText(element.getElementsByTagName("name")[0])
 			load_room_desc = ""
 			if element.getElementsByTagName("description"):
 				load_room_desc = getText(element.getElementsByTagName("description")[0])
 
 			roomList.append(Room(load_room_name, load_room_id, self))
-			roomList[id_room].desc = mushUnEscape(load_room_desc)
-			roomList[id_room].x = load_room_x
-			roomList[id_room].y = load_room_y
+			roomList[-1].desc = mushUnEscape(load_room_desc)
+			roomList[-1].x = load_room_x
+			roomList[-1].y = load_room_y
+			roomList[-1].bColor = load_room_bcolor
 			self.ui.scene.addItem(roomList[id_room].box)
 			self.ui.scene.addItem(roomList[id_room].text)
 			id_room = id_room + 1
@@ -194,6 +197,7 @@ class Main(QtGui.QMainWindow):
 		return check and (number[0] == '#')
 
 	def viewAbout(self):
+		global __version__
 		QMessageBox.about(self, "About Digger", """<b>Digger</b> v %s<p>Copyright &copy; 2016 Martin Tirado. All rights reserved. <p> This program can be used to design MUSH words through a graphical interface. <p> Python %s - Qt %s - PyQt %s on %s <p> Hosted on <a href='https://github.com/mtirado1/digger'> Github </a>""" % (__version__, platform.python_version(), QT_VERSION_STR, PYQT_VERSION_STR, platform.system()))
 
 	def setOptions(self):
@@ -204,6 +208,8 @@ class Main(QtGui.QMainWindow):
 			if self.isRGB(colorString):
 				self.bColor = colorString
 				self.ui.scene.setBackgroundBrush(QColor(colorString))
+			if self.isRGB(str(optionsDialog.le4.text())):
+				self.roomBColor = str(optionsDialog.le4.text())
 			if is_number(optionsDialog.le.text()) and is_number(optionsDialog.le2.text()):
 				self.resize(int(optionsDialog.le.text()), int(optionsDialog.le2.text()))
 				self.ui.graphicsView.setGeometry(QtCore.QRect(0, 0, int(optionsDialog.le.text()), int(optionsDialog.le2.text())))
@@ -275,7 +281,7 @@ class Main(QtGui.QMainWindow):
 			else:
 				roomList[j].text.setHtml("")
 			roomList[j].text.setPos(QPointF(roomList[j].x + ROOM_CENTER + 2 - (roomList[j].text.boundingRect().width() / 2), roomList[j].y + ROOM_SIZE + 5))
-			roomList[j].box.setBrush(QColor("#FF0000"))
+			roomList[j].box.setBrush(QColor(roomList[j].bColor))
 			roomList[j].box.setRect(0, 0, ROOM_SIZE, ROOM_SIZE)
 			self.ui.scene.addItem(roomList[j].box)
 			self.ui.scene.addItem(roomList[j].text)
@@ -294,8 +300,9 @@ class Main(QtGui.QMainWindow):
 			global id_room
 			if roomDialog.le.text() != "":
 				roomList.append(Room(roomDialog.le.text(), findNewId(roomList), self))
-			roomList[id_room].x = x_
-			roomList[id_room].y = y_
+			roomList[-1].x = x_
+			roomList[-1].y = y_
+			roomList[-1].bColor = self.roomBColor
 			self.ui.scene.addItem(roomList[id_room].box)
 			self.ui.scene.addItem(roomList[id_room].text)
 			self.drawAll()

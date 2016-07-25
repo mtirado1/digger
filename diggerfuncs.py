@@ -91,7 +91,7 @@ def saveToFile(fname, parent):
 	global roomList
 	global exitList
 	for iRoom in roomList:
-		stream << ("\t<room id='%d' x='%d' y='%d'>\n" % (iRoom.id, iRoom.x, iRoom.y))
+		stream << ("\t<room id='%d' x='%d' y='%d' bcolor='%s'>\n" % (iRoom.id, iRoom.x, iRoom.y, iRoom.bColor))
 		stream << "\t\t<name>" << Qt.escape(iRoom.name) << "</name>\n"
 		if iRoom.desc != "":
 			stream << "\t\t<description>" << mushEscape(Qt.escape(iRoom.desc)) << "</description>\n"
@@ -165,6 +165,7 @@ class Room:
 		self.id = id_
 		self.name = name
 		self.desc = ""
+		self.bColor = ""
 		self.x = 0
 		self.y = 0
 		self.box = roomBox()
@@ -248,15 +249,19 @@ class optionsClass(QDialog):
 		self.lbl2 = QLabel("Width")
 		self.lbl3 = QLabel("Height")
 		self.lbl4 = QLabel("Background Color")
+		self.lbl5 = QLabel("Default room color")
 		self.le = QLineEdit()
 		self.le2 = QLineEdit()
 		self.le3 = QLineEdit()
+		self.le4 = QLineEdit()
 		self.btn1 = QPushButton("Ok")
 		layout.addRow(self.lbl)
 		layout.addRow(self.lbl2, self.lbl3)
 		layout.addRow(self.le, self.le2)
 		layout.addRow(self.lbl4)
 		layout.addRow(self.le3)
+		layout.addRow(self.lbl5)
+		layout.addRow(self.le4)
 		layout.addRow(self.btn1)
 		self.setLayout(layout)
 		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
@@ -264,6 +269,7 @@ class optionsClass(QDialog):
 		self.le.setText(str(self.parent().ui.graphicsView.width()))
 		self.le2.setText(str(self.parent().ui.graphicsView.height()))
 		self.le3.setText(str(self.parent().bColor))
+		self.le4.setText(str(self.parent().roomBColor))
 
 
 class newRoom(QDialog):
