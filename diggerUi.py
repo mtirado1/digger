@@ -183,6 +183,16 @@ class Ui_MainWindow(object):
 		self.actionToggleText = QtGui.QAction(MainWindow, checkable=True)
 		self.actionToggleText.setChecked(True)
 		self.actionSave.setObjectName(_fromUtf8("actionToggleText"))
+		
+		self.actionNewRoom = QtGui.QAction(MainWindow)
+		self.actionNewRoom.setObjectName(_fromUtf8("actionNewRoom"))
+		self.actionNewRoom.setShortcut("Ctrl+Shift+R")
+		self.actionNewExit= QtGui.QAction(MainWindow)
+		self.actionNewExit.setObjectName(_fromUtf8("actionNewExit"))
+		self.actionNewExit.setShortcut("Ctrl+Shift+E")
+		self.actionNewLabel= QtGui.QAction(MainWindow)
+		self.actionNewLabel.setObjectName(_fromUtf8("actionNewLabel"))
+		self.actionNewLabel.setShortcut("Ctrl+Shift+L")
 
 		self.menuFile.addAction(self.actionNew)
 		self.menuFile.addAction(self.actionOpen)
@@ -191,6 +201,10 @@ class Ui_MainWindow(object):
 		self.menuFile.addAction(self.actionSaveAs)
 		self.menuFile.addSeparator()
 		self.menuFile.addAction(self.actionExport)
+
+		self.menuEdit.addAction(self.actionNewRoom)
+		self.menuEdit.addAction(self.actionNewExit)
+		self.menuEdit.addAction(self.actionNewLabel)
 
 		self.menuView.addAction(self.actionToggleText)
 
@@ -215,6 +229,10 @@ class Ui_MainWindow(object):
 		self.menuView.setTitle(_translate("MainWindow", "View", None))
 		self.actionOptions.setText(_translate("MainWindow", "Options", None))
 		self.actionAbout.setText(_translate("MainWindow", "About", None))
+
+		self.actionNewRoom.setText(_translate("MainWindow", "Add &Room", None))
+		self.actionNewExit.setText(_translate("MainWindow", "Add &Exit", None))
+		self.actionNewLabel.setText(_translate("MainWindow", "Add &Label", None))
 
 		self.actionExport.setText(_translate("MainWindow", "&Export", None))
 		self.actionNew.setText(_translate("MainWindow", "&New", None))
