@@ -18,9 +18,6 @@ SCENE_Y = 628
 roomList = []
 exitList = []
 labelList = []
-global id_exit
-id_room = 0
-id_exit = 0
 id_label = 0
 
 

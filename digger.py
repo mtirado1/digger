@@ -55,24 +55,18 @@ class Main(QtGui.QMainWindow):
 		global roomList
 		global exitList
 		global labelList
-		global id_room
-		global id_exit
-		global id_label
 
 		def getText(element):
 			return element.childNodes[0].data
 
 		def readLabelNode(element):
-			global id_label
 			load_label_x = int(element.getAttribute("x"))
 			load_label_y = int(element.getAttribute("y"))
 			load_label_text = getText(element)
 			labelList.append(Label(load_label_text, load_label_x, load_label_y))
-			self.ui.scene.addItem(labelList[id_label].text)
-			self.ui.scene.addItem(labelList[id_label].box)
-			id_label = id_label + 1
+			self.ui.scene.addItem(labelList[-1].text)
+			self.ui.scene.addItem(labelList[-1].box)
 		def readRoomNode(element):
-			global id_room
 			load_room_id = int(element.getAttribute("id"))
 			load_room_x = int(element.getAttribute("x"))
 			load_room_y = int(element.getAttribute("y"))
@@ -87,12 +81,10 @@ class Main(QtGui.QMainWindow):
 			roomList[-1].x = load_room_x
 			roomList[-1].y = load_room_y
 			roomList[-1].bColor = load_room_bcolor
-			self.ui.scene.addItem(roomList[id_room].box)
-			self.ui.scene.addItem(roomList[id_room].text)
-			id_room = id_room + 1
+			self.ui.scene.addItem(roomList[-1].box)
+			self.ui.scene.addItem(roomList[-1].text)
 
 		def readExitNode(element):
-			global id_exit
 			global exitList
 			load_exit_id = int(element.getAttribute("id"))
 			load_exit_source = int(element.getAttribute("source"))
@@ -105,11 +97,10 @@ class Main(QtGui.QMainWindow):
 			for i in element.getElementsByTagName("alias"):
 				load_exit_alias.append(getText(i))
 			exitList.append(Exit(load_exit_name, load_exit_id, load_exit_source))
-			exitList[id_exit].alias = load_exit_alias
-			exitList[id_exit].dest = load_exit_dest
+			exitList[-1].alias = load_exit_alias
+			exitList[-1].dest = load_exit_dest
 			exitList[-1].desc = mushUnEscape(load_exit_desc)
-			self.ui.scene.addItem(exitList[id_exit].line)
-			id_exit = id_exit + 1
+			self.ui.scene.addItem(exitList[-1].line)
 
 		load_map_width =  int(element.getAttribute("width"))
 		load_map_height = int(element.getAttribute("height"))
@@ -132,15 +123,9 @@ class Main(QtGui.QMainWindow):
 		global roomList
 		global exitList
 		global labelList
-		global id_room
-		global id_exit
-		global id_label
 		del roomList[:]
 		del exitList[:]
 		del labelList[:]
-		id_room = 0
-		id_exit = 0
-		id_label = 0
 		self.ui.scene.clear()
 		DOMTree = xml.dom.minidom.parse(str(fname))
 		root = DOMTree.documentElement
@@ -225,12 +210,6 @@ class Main(QtGui.QMainWindow):
 		global roomList
 		global exitList
 		global labelList
-		global id_room
-		global id_exit
-		global id_label
-		id_room = 0
-		id_exit = 0
-		id_label = 0
 		del roomList[:]
 		del exitList[:]
 		del labelList[:]
@@ -279,6 +258,7 @@ class Main(QtGui.QMainWindow):
 			self.ui.scene.addItem(roomList[j].text)
 			roomList[j].box.setZValue(1)
 		for j in xrange(len(labelList)):
+			labelList[j].box.index = j
 			labelList[j].text.setZValue(10)
 			labelList[j].box.setZValue(9)
 			labelList[j].text.setPos(labelList[j].x, labelList[j].y)
@@ -289,34 +269,28 @@ class Main(QtGui.QMainWindow):
 		roomDialog = newRoom(self)
 		if roomDialog.exec_():
 			global roomList
-			global id_room
 			if roomDialog.le.text() != "":
 				roomList.append(Room(roomDialog.le.text(), findNewId(roomList), self))
 			roomList[-1].x = x_
 			roomList[-1].y = y_
 			roomList[-1].bColor = self.roomBColor
 			roomList[-1].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
-			self.ui.scene.addItem(roomList[id_room].box)
-			self.ui.scene.addItem(roomList[id_room].text)
+			self.ui.scene.addItem(roomList[-1].box)
+			self.ui.scene.addItem(roomList[-1].text)
 			self.drawAll()
-			id_room = id_room + 1
 			roomDialog.close()
 
 	def deleteRoom(self, index):
-		global id_room
-		global id_exit
 		global exitList
 		global roomList
 		self.ui.scene.removeItem(roomList[index].box)
 		self.ui.scene.removeItem(roomList[index].text)
-		id_room = id_room - 1
 		deleted = True
 		while deleted:
 			for x in xrange(len(exitList)): # First round, delete all sources
 				if exitList[x].source == roomList[index].id:
 					self.ui.scene.removeItem(exitList[x].line)
 					del exitList[x]
-					id_exit = id_exit - 1
 					break
 				else:
 					deleted = False
@@ -334,35 +308,31 @@ class Main(QtGui.QMainWindow):
 		exitDialog.setData()
 		if exitDialog.exec_():
 			global exitList
-			global id_exit
-			exitList.append(Exit(exitDialog.le.text(), id_exit, exitDialog.rDict[str(exitDialog.combo1.currentText())]))
-			exitList[id_exit].dest = exitDialog.rDict[str(exitDialog.combo2.currentText())]
+			exitList.append(Exit(exitDialog.le.text(), findNewId(exitList), exitDialog.rDict[str(exitDialog.combo1.currentText())]))
+			exitList[-1].dest = exitDialog.rDict[str(exitDialog.combo2.currentText())]
 			exitList[-1].desc = exitDialog.te1.toPlainText()
 			for x in xrange(exitDialog.list1.count()):
 				exitList[-1].alias.append(exitDialog.list1.item(x).text())
-			self.ui.scene.addItem(exitList[id_exit].line)
+			self.ui.scene.addItem(exitList[-1].line)
 			self.drawAll()
-			id_exit = id_exit + 1
 			exitDialog.close()
 	def openExitName(self, source, destination):
-		global id_exit
 		global roomList
 		global exitList
 		exitList.append(Exit("##placeholder##", findNewId(exitList), roomList[source].id)) # User will be asked for name soon
-		exitList[id_exit].dest = destination
-		self.ui.scene.addItem(exitList[id_exit].line)
+		exitList[-1].dest = destination
+		self.ui.scene.addItem(exitList[-1].line)
 		exitDialog = newExitName()
 		if exitDialog.exec_():
-			exitList[id_exit].name = exitDialog.le.text()
+			exitList[-1].name = exitDialog.le.text()
 			if exitDialog.checkBox.isChecked():
-				exitList.append(Exit(exitDialog.le2.text(), id_exit, roomList[destination].id))
+				exitList.append(Exit(exitDialog.le2.text(), findNewId(exitList), roomList[destination].id))
 				exitList[-1].dest = source
 				self.ui.scene.addItem(exitList[-1].line)
 		else:
 			self.ui.scene.removeItem(exitList[-1])
 			del exitList[-1]
 		self.drawAll()
-		id_exit = id_exit + 1
 
 	def editExitProperties(self, index):
 		editDialog = editExit()
@@ -382,21 +352,18 @@ class Main(QtGui.QMainWindow):
 		labelDialog = addLabel()
 		if labelDialog.exec_():
 			global labelList
-			global id_label
+			newIndex = len(labelList)
 			labelList.append(Label(labelDialog.le.text(), x_, y_))
-			labelList[id_label].box.index = id_label
-			self.ui.scene.addItem(labelList[id_label].text)
-			self.ui.scene.addItem(labelList[id_label].box)
+			labelList[-1].box.index = newIndex
+			self.ui.scene.addItem(labelList[-1].text)
+			self.ui.scene.addItem(labelList[-1].box)
 			self.drawAll()
-			id_label = id_label + 1
 			labelDialog.close()
 	def deleteLabel(self, id_):
 		global labelList
-		global id_label
 		self.ui.scene.removeItem(labelList[id_].text)
 		self.ui.scene.removeItem(labelList[id_].box)
 		del labelList[id_]
-		id_label = id_label - 1
 		self.drawAll()
 
 

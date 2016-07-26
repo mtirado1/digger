@@ -45,11 +45,11 @@ class mapView(QtGui.QGraphicsView):
 			for iRoom in roomList:
 				if self.isWithin(event.x(), iRoom.x, ROOM_SIZE) and self.isWithin(event.y(), iRoom.y, ROOM_SIZE):
 					check = 1
-					self.parent().parent().openExitName(self.source, iRoom.id)
-					self.parent().parent().ui.scene.removeItem(self.tempLine)
+					self.parent().openExitName(self.source, iRoom.id)
+					self.parent().ui.scene.removeItem(self.tempLine)
 					break
 			if check == 0:
-				self.parent().parent().ui.scene.removeItem(self.tempLine)
+				self.parent().ui.scene.removeItem(self.tempLine)
 			self.joinExit = 0
 
 	def contextMenuEvent(self, event):
@@ -98,18 +98,18 @@ class mapView(QtGui.QGraphicsView):
 					roomList[objectClicked].desc=editDialog.te.toPlainText()
 					roomList[objectClicked].x=int(editDialog.le2.text())
 					roomList[objectClicked].y=int(editDialog.le3.text())
-					self.parent().parent().drawAll()
+					self.parent().drawAll()
 					editDialog.close()
 			elif action == actionAddExit:
 				self.joinExit = 1
 				self.source = objectClicked
-				self.parent().parent().ui.scene.addItem(self.tempLine)
+				self.parent().ui.scene.addItem(self.tempLine)
 			elif action == actionDeleteRoom:
-				self.parent().parent().deleteRoom(objectClicked)
+				self.parent().deleteRoom(objectClicked)
 			else:
 				for k in xrange(len(actionExitList)):
 					if action == actionExitList[k]:
-						self.parent().parent().editExitProperties(actionExitId[k])
+						self.parent().editExitProperties(actionExitId[k])
 						break
 		#User clicked on a label
 		elif check == 2:
@@ -125,7 +125,7 @@ class mapView(QtGui.QGraphicsView):
 					labelList[objectClicked].setText(editDialog.le.text())
 					labelList[objectClicked].box.setRect(0, 0, labelList[objectClicked].text.boundingRect().width(), labelList[objectClicked].text.boundingRect().height())
 			elif action == actionDeleteLabel:
-				self.parent().parent().deleteLabel(objectClicked)
+				self.parent().deleteLabel(objectClicked)
 		#Map Actions, user clicked on scene
 		elif check == 0:
 			menu = QMenu()
@@ -134,11 +134,11 @@ class mapView(QtGui.QGraphicsView):
 			actionAddLabel = menu.addAction("Add Label")
 			action = menu.exec_(event.globalPos())
 			if action == actionNewRoom:
-				self.parent().parent().digRoom(scenePos.x(), scenePos.y())
+				self.parent().digRoom(scenePos.x(), scenePos.y())
 			elif action == actionNewExit:
-				self.parent().parent().openExit()
+				self.parent().openExit()
 			elif action == actionAddLabel:
-				self.parent().parent().addLabel(scenePos.x(), scenePos.y())
+				self.parent().addLabel(scenePos.x(), scenePos.y())
 
 class Ui_MainWindow(object):
 	def setupUi(self, MainWindow):
