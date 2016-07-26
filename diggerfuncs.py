@@ -9,10 +9,8 @@ __version__ = "1.1.0"
 
 ROOM_SIZE = 31 # odd number
 ROOM_CENTER = (ROOM_SIZE - 1) / 2
-VIEW_X = 1080
-VIEW_Y = 683
-SCENE_X = 1080
-SCENE_Y = 669
+SCENE_X = 1065
+SCENE_Y = 628
 
 
 #######################################
@@ -87,7 +85,7 @@ def saveToFile(fname, parent):
 	stream = QTextStream(fsave)
 	stream.setCodec("UTF-8")
 	stream << ("<?xml version='1.0' encoding='UTF-8'?>\n" + "<!DOCTYPE DIGGER>\n" + "<DIGGER VERSION='%s'>\n" % (__version__))
-	stream << ("<map width='%d' height='%d' bcolor='%s'>\n" % (parent.ui.graphicsView.width(), parent.ui.graphicsView.height(), parent.bColor))
+	stream << ("<map width='%d' height='%d' bcolor='%s'>\n" % (parent.ui.scene.width(), parent.ui.scene.height(), parent.bColor))
 	global roomList
 	global exitList
 	for iRoom in roomList:
@@ -142,7 +140,6 @@ class roomBox(QGraphicsRectItem):
 		self.setFlag(QGraphicsItem.ItemIsSelectable, True)
 		self.index = 0
 		self.moved = 0
-		self.move_restrict_rect = QRectF(0, 0, SCENE_X, SCENE_Y)
 		#self.setRect(QRectF(0,0,1080,683))
 
 	def mouseReleaseEvent(self, event):
@@ -245,7 +242,7 @@ class optionsClass(QDialog):
 		super(optionsClass, self).__init__(parent)
 		layout = QFormLayout()
 		self.setWindowTitle("Options")
-		self.lbl = QLabel("Window Size")
+		self.lbl = QLabel("Map Size")
 		self.lbl2 = QLabel("Width")
 		self.lbl3 = QLabel("Height")
 		self.lbl4 = QLabel("Background Color")
@@ -266,8 +263,8 @@ class optionsClass(QDialog):
 		self.setLayout(layout)
 		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
 	def setData(self):
-		self.le.setText(str(self.parent().ui.graphicsView.width()))
-		self.le2.setText(str(self.parent().ui.graphicsView.height()))
+		self.le.setText(str(int(self.parent().ui.scene.width())))
+		self.le2.setText(str(int(self.parent().ui.scene.height())))
 		self.le3.setText(str(self.parent().bColor))
 		self.le4.setText(str(self.parent().roomBColor))
 

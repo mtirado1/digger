@@ -47,11 +47,6 @@ class Main(QtGui.QMainWindow):
 		self.roomBColor = "#FF0000"
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 
-	def resizeEvent(self, event):
-		self.ui.graphicsView.setGeometry(QtCore.QRect(0, 0, event.size().width(), event.size().height()))
-		self.ui.scene.setSceneRect(0, 0, event.size().width(), event.size().height() - 14)
-		for iRoom in roomList:
-			iRoom.box.move_restrict_rect = QRectF(0, 0, event.size().width(), event.size().height() - 14)
 
 	def toggleText(self):
 		self.drawAll()
@@ -131,10 +126,7 @@ class Main(QtGui.QMainWindow):
 
 		self.bColor = load_map_bcolor
 		self.ui.scene.setBackgroundBrush(QColor(load_map_bcolor))
-		self.resize(load_map_width, load_map_height)
-		self.ui.graphicsView.setGeometry(QtCore.QRect(0, 0, load_map_width, load_map_height))
-		self.ui.menubar.setGeometry(QtCore.QRect(0, 0, load_map_width, load_map_height))
-		self.ui.scene.setSceneRect(0, 0, load_map_width, load_map_height - 14)
+		self.ui.scene.setSceneRect(0, 0, load_map_width, load_map_height)
 
 	def populateFromDOM(self, fname):
 		global roomList
@@ -211,10 +203,10 @@ class Main(QtGui.QMainWindow):
 			if self.isRGB(str(optionsDialog.le4.text())):
 				self.roomBColor = str(optionsDialog.le4.text())
 			if is_number(optionsDialog.le.text()) and is_number(optionsDialog.le2.text()):
-				self.resize(int(optionsDialog.le.text()), int(optionsDialog.le2.text()))
-				self.ui.graphicsView.setGeometry(QtCore.QRect(0, 0, int(optionsDialog.le.text()), int(optionsDialog.le2.text())))
-				self.ui.menubar.setGeometry(QtCore.QRect(0, 0, int(optionsDialog.le.text()), int(optionsDialog.le2.text())))
-				self.ui.scene.setSceneRect(0, 0, int(optionsDialog.le.text()), int(optionsDialog.le2.text()) - 14)
+				#self.resize(int(optionsDialog.le.text()), int(optionsDialog.le2.text()))
+				#self.ui.graphicsView.setGeometry(QtCore.QRect(0, 0, int(optionsDialog.le.text()), int(optionsDialog.le2.text())))
+				#self.ui.menubar.setGeometry(QtCore.QRect(0, 0, int(optionsDialog.le.text()), int(optionsDialog.le2.text())))
+				self.ui.scene.setSceneRect(QRectF(0, 0, int(optionsDialog.le.text()), int(optionsDialog.le2.text())))
 				global roomList
 				for x in xrange(len(roomList)):
 					roomList[x].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
@@ -303,6 +295,7 @@ class Main(QtGui.QMainWindow):
 			roomList[-1].x = x_
 			roomList[-1].y = y_
 			roomList[-1].bColor = self.roomBColor
+			roomList[-1].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
 			self.ui.scene.addItem(roomList[id_room].box)
 			self.ui.scene.addItem(roomList[id_room].text)
 			self.drawAll()

@@ -33,7 +33,7 @@ class mapView(QtGui.QGraphicsView):
 	def mouseMoveEvent(self, event):
 		QGraphicsView.mouseMoveEvent(self, event)
 		if self.joinExit == 1:
-			self.tempLine.setLine(roomList[self.source].x + ROOM_CENTER, roomList[self.source].y + ROOM_CENTER, event.x(), event.y())
+			self.tempLine.setLine(roomList[self.source].x + ROOM_CENTER, roomList[self.source].y + ROOM_CENTER, self.mapToScene(event.x(), event.y()).x(), self.mapToScene(event.x(), event.y()).y())
 
 	def mousePressEvent(self, event):
 		global roomList
@@ -58,15 +58,17 @@ class mapView(QtGui.QGraphicsView):
 		global labelList
 		global exitList
 		global id_exit
+		eventPos = QPoint(event.x(), event.y())
+		scenePos = self.mapToScene(eventPos)
 		check = 0
 		objectClicked = 0
 		for i in range(len(roomList)):
-			if self.isWithin(event.x(), roomList[i].x, ROOM_SIZE) and self.isWithin(event.y(), roomList[i].y, ROOM_SIZE):
+			if self.isWithin(self.mapToScene(eventPos).x(), roomList[i].x, ROOM_SIZE) and self.isWithin(self.mapToScene(eventPos).y(), roomList[i].y, ROOM_SIZE):
 				objectClicked = i
 				check = 1
 		if check == 0:
 			for i in xrange(len(labelList)):
-				if self.isWithin(event.x(), labelList[i].x, labelList[i].box.boundingRect().width()) and self.isWithin(event.y(), labelList[i].y, labelList[i].box.boundingRect().height()):
+				if self.isWithin(self.mapToScene(eventPos).x(), labelList[i].x, labelList[i].box.boundingRect().width()) and self.isWithin(self.mapToScene(eventPos).y(), labelList[i].y, labelList[i].box.boundingRect().height()):
 					objectClicked = i
 					check = 2
 		#User clicked on a room
@@ -132,22 +134,19 @@ class mapView(QtGui.QGraphicsView):
 			actionAddLabel = menu.addAction("Add Label")
 			action = menu.exec_(event.globalPos())
 			if action == actionNewRoom:
-				self.parent().parent().digRoom(event.x(), event.y())
+				self.parent().parent().digRoom(scenePos.x(), scenePos.y())
 			elif action == actionNewExit:
 				self.parent().parent().openExit()
 			elif action == actionAddLabel:
-				self.parent().parent().addLabel(event.x(), event.y())
+				self.parent().parent().addLabel(scenePos.x(), scenePos.y())
 
 class Ui_MainWindow(object):
 	def setupUi(self, MainWindow):
 		MainWindow.setObjectName(_fromUtf8("MainWindow"))
 		MainWindow.resize(1080, 683)
-		self.centralwidget = QtGui.QWidget(MainWindow)
-		self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
-		self.graphicsView = mapView(self.centralwidget)
-		self.graphicsView.setGeometry(QtCore.QRect(0, 0, VIEW_X, VIEW_Y))
+		self.graphicsView = mapView(MainWindow)
 		self.graphicsView.setObjectName(_fromUtf8("graphicsView"))
-		MainWindow.setCentralWidget(self.centralwidget)
+		MainWindow.setCentralWidget(self.graphicsView)
 		self.menubar = QtGui.QMenuBar(MainWindow)
 		self.menubar.setGeometry(QtCore.QRect(0, 0, 1080, 25))
 		self.menubar.setObjectName(_fromUtf8("menubar"))
@@ -204,9 +203,10 @@ class Ui_MainWindow(object):
 		QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
 		# Prepare scene
-		self.scene = QGraphicsScene(self.centralwidget)
+		self.scene = QGraphicsScene(self.graphicsView)
 		self.scene.setSceneRect(0 , 0, SCENE_X, SCENE_Y)
 		self.graphicsView.setScene(self.scene)
+		self.graphicsView.setAlignment(Qt.AlignLeft|Qt.AlignTop)
 
 	def retranslateUi(self, MainWindow):
 		MainWindow.setWindowTitle(_translate("MainWindow", "Digger", None))
