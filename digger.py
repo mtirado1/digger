@@ -41,6 +41,10 @@ class Main(QtGui.QMainWindow):
 		self.ui.actionSave.triggered.connect(self.saveFile)
 		self.ui.actionToggleText.triggered.connect(self.toggleText)
 		self.ui.actionSaveAs.triggered.connect(self.saveFileAs)
+		self.ui.actionNewRoom.triggered.connect(lambda: self.digRoom(self.ui.scene.width()/2, self.ui.scene.height()/2))
+		self.ui.actionNewExit.triggered.connect(lambda: self.openExit(self.ui.scene.width()/2, self.ui.scene.height()/2))
+		self.ui.actionNewLabel.triggered.connect(lambda: self.addLabel(self.ui.scene.width()/2, self.ui.scene.height()/2))
+		
 		self.isNewFile = 1
 		self.fileName = "Untitled"
 		self.bColor = "#FFFFFF"
