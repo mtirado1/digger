@@ -44,7 +44,7 @@ class Main(QtGui.QMainWindow):
 		self.ui.actionNewRoom.triggered.connect(lambda: self.digRoom(self.ui.scene.width()/2, self.ui.scene.height()/2))
 		self.ui.actionNewExit.triggered.connect(lambda: self.openExit(self.ui.scene.width()/2, self.ui.scene.height()/2))
 		self.ui.actionNewLabel.triggered.connect(lambda: self.addLabel(self.ui.scene.width()/2, self.ui.scene.height()/2))
-		
+
 		self.isNewFile = 1
 		self.fileName = "Untitled"
 		self.bColor = "#FFFFFF"
@@ -77,15 +77,19 @@ class Main(QtGui.QMainWindow):
 			load_room_bcolor = element.getAttribute("bcolor")
 			load_room_name = getText(element.getElementsByTagName("name")[0])
 			load_room_desc = ""
+			load_room_code = []
 			if element.getElementsByTagName("description"):
 				load_room_desc = getText(element.getElementsByTagName("description")[0])
-
+			for i in element.getElementsByTagName("code"):
+				load_room_code.append(getText(i))
 			roomList.append(Room(load_room_name, load_room_id, self))
 			roomList[-1].desc = mushUnEscape(load_room_desc)
 			roomList[-1].x = load_room_x
 			roomList[-1].y = load_room_y
 			roomList[-1].bColor = load_room_bcolor
+			roomList[-1].code = load_room_code
 			self.ui.scene.addItem(roomList[-1].box)
+			roomList[-1].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
 			self.ui.scene.addItem(roomList[-1].text)
 
 		def readExitNode(element):
@@ -337,6 +341,25 @@ class Main(QtGui.QMainWindow):
 			self.ui.scene.removeItem(exitList[-1])
 			del exitList[-1]
 		self.drawAll()
+
+
+	def editRoomProperties(self, index):
+		editDialog = editRoom()
+		editDialog.setData(index)
+		if editDialog.exec_():
+			global roomList
+			roomList[index].name=editDialog.le.text()
+			roomList[index].desc=editDialog.te.toPlainText()
+			roomList[index].x=int(editDialog.le2.text())
+			roomList[index].y=int(editDialog.le3.text())
+
+			codeList = editDialog.te2.toPlainText().split("\n")
+			roomList[index].code = []
+			for codeLine in codeList:
+				roomList[index].code.append(codeLine)
+
+			self.drawAll()
+			editDialog.close()
 
 	def editExitProperties(self, index):
 		editDialog = editExit()

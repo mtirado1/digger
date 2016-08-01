@@ -90,21 +90,13 @@ class mapView(QtGui.QGraphicsView):
 					actionExitList.append(exitMenu.addAction(exitList[f].name))
 			exitMenu.setEnabled(menuEnabled)
 			action = menu.exec_(event.globalPos())
-			if action == actionEditRoom:
-				editDialog = editRoom()
-				editDialog.setData(objectClicked)
-				if editDialog.exec_():
-					roomList[objectClicked].name=editDialog.le.text()
-					roomList[objectClicked].desc=editDialog.te.toPlainText()
-					roomList[objectClicked].x=int(editDialog.le2.text())
-					roomList[objectClicked].y=int(editDialog.le3.text())
-					self.parent().drawAll()
-					editDialog.close()
-			elif action == actionAddExit:
+			if action == actionEditRoom: # Edit a room
+				self.parent().editRoomProperties(objectClicked)
+			elif action == actionAddExit: # Add new exit
 				self.joinExit = 1
 				self.source = objectClicked
 				self.parent().ui.scene.addItem(self.tempLine)
-			elif action == actionDeleteRoom:
+			elif action == actionDeleteRoom: # Delete a room
 				self.parent().deleteRoom(objectClicked)
 			else:
 				for k in xrange(len(actionExitList)):
@@ -183,7 +175,7 @@ class Ui_MainWindow(object):
 		self.actionToggleText = QtGui.QAction(MainWindow, checkable=True)
 		self.actionToggleText.setChecked(True)
 		self.actionSave.setObjectName(_fromUtf8("actionToggleText"))
-		
+
 		self.actionNewRoom = QtGui.QAction(MainWindow)
 		self.actionNewRoom.setObjectName(_fromUtf8("actionNewRoom"))
 		self.actionNewRoom.setShortcut("Ctrl+Shift+R")

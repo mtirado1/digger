@@ -25,11 +25,11 @@ def midPoint(x1, x2):
 	return (x1 + x2) / 2
 
 def is_number(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
+	try:
+		int(s)
+		return True
+	except ValueError:
+		return False
 
 def mushUnEscape(str):
 	retStr = ""
@@ -90,6 +90,8 @@ def saveToFile(fname, parent):
 		stream << "\t\t<name>" << Qt.escape(iRoom.name) << "</name>\n"
 		if iRoom.desc != "":
 			stream << "\t\t<description>" << mushEscape(Qt.escape(iRoom.desc)) << "</description>\n"
+		for codeLine in iRoom.code:
+			stream << "\t\t<code>" << Qt.escape(codeLine) << "</code>\n"
 		stream << "\t</room>\n"
 	for iExit in exitList:
 		stream << ("\t<exit id='%d' source='%d' destination='%d'>\n" % (iExit.id, iExit.source, iExit.dest))
@@ -164,7 +166,7 @@ class Room:
 		self.y = 0
 		self.box = roomBox()
 		self.text = QGraphicsTextItem()
-
+		self.code = [] # List of lines of code to be executed in room
 
 class Exit:
 	type='exit'
@@ -220,6 +222,8 @@ class exportClass(QDialog):
 			if k.desc != "":
 				strExport = strExport + "@desc here=" + mushEscape(str(k.desc)) + "\n"
 			strExport = strExport + "@set me=room_id" + str(k.id) + ":[loc(me)]" + "\n"
+			for codeLine in k.code:
+				strExport = strExport + codeLine + "\n"
 		for k in exitList:
 			strExport = strExport + "@tel [v(room_id" + str(k.source) + ")]" + "\n"
 			aliasString = ""
@@ -285,18 +289,20 @@ class editRoom(QDialog):
 		self.setWindowTitle("Edit Room Properties")
 		self.tabName = QWidget()
 		self.tabDesc = QWidget()
+		self.tabCode = QWidget()
 		self.tab = QTabWidget()
 		self.btn1 = QPushButton("Ok")
 		self.btn1.clicked.connect(self.accept)
 		self.tab.addTab(self.tabName, "Name")
 		self.tab.addTab(self.tabDesc, "Description")
+		self.tab.addTab(self.tabCode, "Code")
 
 		tabLayout = QFormLayout()
 		tabLayout.addRow(self.tab)
 		tabLayout.addRow(self.btn1)
 		self.setLayout(tabLayout)
 
-		layout = QFormLayout()
+		layout = QFormLayout() # Layout for name tab
 		self.cur_room = 0
 		self.lbl = QLabel("Name")
 		self.le = QLineEdit()
@@ -308,16 +314,24 @@ class editRoom(QDialog):
 		layout.addRow(self.le2, self.le3)
 		self.tabName.setLayout(layout)
 
-		layout2 = QFormLayout()
+		layout2 = QFormLayout() # Layout for description tab
 		self.lblDesc = QLabel("Description")
 		self.te = QTextEdit()
 		layout2.addRow(self.lblDesc)
 		layout2.addRow(self.te)
 		self.tabDesc.setLayout(layout2)
 
+		layout3 = QFormLayout() # Layout for code tab
+		self.lblCode = QLabel("Code")
+		self.te2 = QTextEdit()
+		layout3.addRow(self.lblCode)
+		layout3.addRow(self.te2)
+		self.tabCode.setLayout(layout3)
+
 	def setData(self, room):
 		self.le.setText(roomList[room].name)
 		self.te.setPlainText(roomList[room].desc)
+		self.te2.setPlainText(str("\n".join(roomList[room].code))) # Join lines of mushcode
 		self.le2.setText(str(int(roomList[room].x)))
 		self.le3.setText(str(int(roomList[room].y)))
 
