@@ -9,7 +9,7 @@ from PyQt4 import QtCore, QtGui
 from diggerUi import *
 from diggerfuncs import __version__
 import platform
-
+import diggerconf
 
 
 try:
@@ -254,7 +254,7 @@ class Main(QtGui.QMainWindow):
 			roomString = roomString + "<br />Exits:<br />"
 			for k in xrange(len(exitList)):
 				if exitList[k].source == roomList[j].id:
-					roomString = roomString + exitList[k].name + "<br />"
+					roomString = roomString + Qt.escape(exitList[k].name) + "<br />"
 			if self.ui.actionToggleText.isChecked():
 				roomList[j].text.setHtml(roomString + "</p>")
 			else:
@@ -316,30 +316,31 @@ class Main(QtGui.QMainWindow):
 		exitDialog.setData()
 		if exitDialog.exec_():
 			global exitList
+
 			exitList.append(Exit(exitDialog.le.text(), findNewId(exitList), exitDialog.rDict[str(exitDialog.combo1.currentText())]))
 			exitList[-1].dest = exitDialog.rDict[str(exitDialog.combo2.currentText())]
 			exitList[-1].desc = exitDialog.te1.toPlainText()
-			for x in xrange(exitDialog.list1.count()):
-				exitList[-1].alias.append(exitDialog.list1.item(x).text())
+
+			if exitDialog.le.text() not in diggerconf.aliasDict: # Don't override alias tab
+				for x in xrange(exitDialog.list1.count()):
+					exitList[-1].alias.append(exitDialog.list1.item(x).text())
+
 			self.ui.scene.addItem(exitList[-1].line)
 			self.drawAll()
 			exitDialog.close()
+
 	def openExitName(self, source, destination):
 		global roomList
 		global exitList
-		exitList.append(Exit("##placeholder##", findNewId(exitList), roomList[source].id)) # User will be asked for name soon
-		exitList[-1].dest = destination
-		self.ui.scene.addItem(exitList[-1].line)
 		exitDialog = newExitName()
 		if exitDialog.exec_():
-			exitList[-1].name = exitDialog.le.text()
+			exitList.append(Exit(exitDialog.le.text(), findNewId(exitList), roomList[source].id))
+			exitList[-1].dest = destination
+			self.ui.scene.addItem(exitList[-1].line)
 			if exitDialog.checkBox.isChecked():
 				exitList.append(Exit(exitDialog.le2.text(), findNewId(exitList), roomList[destination].id))
 				exitList[-1].dest = source
 				self.ui.scene.addItem(exitList[-1].line)
-		else:
-			self.ui.scene.removeItem(exitList[-1])
-			del exitList[-1]
 		self.drawAll()
 
 
@@ -395,6 +396,7 @@ class Main(QtGui.QMainWindow):
 
 
 if __name__ == "__main__":
+	diggerconf.loadConfigFile()
 	app = QtGui.QApplication(sys.argv)
 	window = Main()
 	window.show()

@@ -1,4 +1,5 @@
 import sys
+import diggerconf
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
@@ -171,6 +172,7 @@ class Room:
 class Exit:
 	type='exit'
 	def __init__(self, name, id_, source):
+
 		self.id = id_
 		self.name = name
 		self.alias = []
@@ -178,7 +180,11 @@ class Exit:
 		self.source = source
 		self.dest = -1
 		self.line = QGraphicsLineItem()
-
+		if str(name) in diggerconf.aliasDict:
+			self.name = diggerconf.aliasDict[str(name)][0]
+			for x in xrange(len(diggerconf.aliasDict[str(name)])):
+				if x != 0:
+					self.alias.append(diggerconf.aliasDict[str(name)][x])
 class Label:
 	type='label'
 	def __init__(self, text, x_, y_):
