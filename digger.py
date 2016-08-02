@@ -51,8 +51,7 @@ class Main(QtGui.QMainWindow):
 		self.ui.scene.setBackgroundBrush(QColor(self.bColor))
 		self.roomBColor = diggerconf.roomColor
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
-
-
+	
 	def toggleText(self):
 		self.drawAll()
 

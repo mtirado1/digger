@@ -24,8 +24,26 @@ class mapView(QtGui.QGraphicsView):
 		self.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
 		self.joinExit = 0
 		self.source = -1
+
+		self.oldPos = 0
+		self.newPos = 0
+		self.isPanning = False
 		self.tempLine = QGraphicsLineItem()
 		self.setMouseTracking(True)
+		self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+		self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+		self.zoomFactor = 1
+
+	def wheelEvent(self, event):
+		factor = -event.delta() // 120
+		if factor == 1:
+			factor = 1.25
+		elif factor == -1:
+			factor = 0.8
+
+		if self.parent().ui.scene.width()*self.zoomFactor*factor >= self.parent().ui.scene.width():
+			self.zoomFactor *= factor
+			self.scale(factor, factor)
 
 	def isWithin(self, a, b, r):
 		#Checks if a is within b+r and b-r
@@ -35,16 +53,28 @@ class mapView(QtGui.QGraphicsView):
 		QGraphicsView.mouseMoveEvent(self, event)
 		if self.joinExit == 1:
 			self.tempLine.setLine(roomList[self.source].x + ROOM_CENTER, roomList[self.source].y + ROOM_CENTER, self.mapToScene(event.x(), event.y()).x(), self.mapToScene(event.x(), event.y()).y())
+		elif self.isPanning == True:
+			self.newPos = event.pos() - self.oldPos
+			self.oldPos = event.pos()
+			self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - self.newPos.x())
+			self.verticalScrollBar().setValue(self.verticalScrollBar().value() - self.newPos.y())
+
+	def mouseReleaseEvent(self, event):
+		QGraphicsView.mouseReleaseEvent(self, event)
+		if event.button() == Qt.LeftButton:
+			self.isPanning = False
 
 	def mousePressEvent(self, event):
 		global roomList
 		global exitList
 		global id_exit
+		eventPos = QPoint(event.x(), event.y())
+		scenePos = self.mapToScene(eventPos)
 		QGraphicsView.mousePressEvent(self, event)
 		if self.joinExit == 1:
 			check = 0
 			for iRoom in roomList:
-				if self.isWithin(event.x(), iRoom.x, ROOM_SIZE) and self.isWithin(event.y(), iRoom.y, ROOM_SIZE):
+				if self.isWithin(scenePos.x(), iRoom.x, ROOM_SIZE) and self.isWithin(scenePos.y(), iRoom.y, ROOM_SIZE):
 					check = 1
 					self.parent().openExitName(self.source, iRoom.id)
 					self.parent().ui.scene.removeItem(self.tempLine)
@@ -52,6 +82,15 @@ class mapView(QtGui.QGraphicsView):
 			if check == 0:
 				self.parent().ui.scene.removeItem(self.tempLine)
 			self.joinExit = 0
+		else:
+			check = 0
+			for iRoom in roomList:
+				if self.isWithin(scenePos.x(), iRoom.x, ROOM_SIZE) and self.isWithin(scenePos.y(), iRoom.y, ROOM_SIZE): # Pan View
+					check = 1
+					break
+			if event.button() == Qt.LeftButton and check == 0:
+				self.isPanning = True
+				self.oldPos = event.pos()
 
 	def contextMenuEvent(self, event):
 		#Check if the user clicked on a room
@@ -63,6 +102,10 @@ class mapView(QtGui.QGraphicsView):
 		scenePos = self.mapToScene(eventPos)
 		check = 0
 		objectClicked = 0
+
+		if scenePos.x() > self.parent().ui.scene.width() or scenePos.y() > self.parent().ui.scene.height(): # Cursor outside of scene
+			return
+
 		for i in range(len(roomList)):
 			if self.isWithin(self.mapToScene(eventPos).x(), roomList[i].x, ROOM_SIZE) and self.isWithin(self.mapToScene(eventPos).y(), roomList[i].y, ROOM_SIZE):
 				objectClicked = i
