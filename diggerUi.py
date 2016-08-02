@@ -1,6 +1,7 @@
 
 from PyQt4 import QtCore, QtGui
 from diggerfuncs import *
+import diggerconf
 
 try:
 	_fromUtf8 = QtCore.QString.fromUtf8
@@ -210,7 +211,7 @@ class Ui_MainWindow(object):
 
 		# Prepare scene
 		self.scene = QGraphicsScene(self.graphicsView)
-		self.scene.setSceneRect(0 , 0, SCENE_X, SCENE_Y)
+		self.scene.setSceneRect(0 , 0, diggerconf.mapWidth, diggerconf.mapHeight)
 		self.graphicsView.setScene(self.scene)
 		self.graphicsView.setAlignment(Qt.AlignLeft|Qt.AlignTop)
 

@@ -3,16 +3,13 @@ import diggerconf
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 #######################################
 # Some constants
 
 ROOM_SIZE = 31 # odd number
 ROOM_CENTER = (ROOM_SIZE - 1) / 2
-SCENE_X = 1065
-SCENE_Y = 628
-
 
 #######################################
 # Global Lists and id references
@@ -115,7 +112,6 @@ class labelBox(QGraphicsRectItem):
 		self.setFlag(QGraphicsItem.ItemIsSelectable, True)
 		self.index = 0
 		self.moved = 0
-		self.move_restrict_rect = QRectF(0, 0, SCENE_X, SCENE_Y)
 
 	def mouseReleaseEvent(self, event):
 		if self.moved == 1:

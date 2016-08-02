@@ -47,8 +47,9 @@ class Main(QtGui.QMainWindow):
 
 		self.isNewFile = 1
 		self.fileName = "Untitled"
-		self.bColor = "#FFFFFF"
-		self.roomBColor = "#FF0000"
+		self.bColor = diggerconf.mapColor
+		self.ui.scene.setBackgroundBrush(QColor(self.bColor))
+		self.roomBColor = diggerconf.roomColor
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 
 
@@ -70,6 +71,7 @@ class Main(QtGui.QMainWindow):
 			labelList.append(Label(load_label_text, load_label_x, load_label_y))
 			self.ui.scene.addItem(labelList[-1].text)
 			self.ui.scene.addItem(labelList[-1].box)
+			labelList[-1].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
 		def readRoomNode(element):
 			load_room_id = int(element.getAttribute("id"))
 			load_room_x = int(element.getAttribute("x"))
@@ -385,6 +387,7 @@ class Main(QtGui.QMainWindow):
 			labelList[-1].box.index = newIndex
 			self.ui.scene.addItem(labelList[-1].text)
 			self.ui.scene.addItem(labelList[-1].box)
+			labelList[-1].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
 			self.drawAll()
 			labelDialog.close()
 	def deleteLabel(self, id_):
