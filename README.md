@@ -3,8 +3,9 @@ Design MUSH worlds through a graphical interface.
 
 This is a program to design, edit and save MUSH worlds (rooms, exits) using a graphical interface, without requiring any softcoding skills.
 
-Currently it can only be exported to
-[PennMUSH](https://github.com/pennmush/pennmush) mushcode.
+Digger can export worlds to [PennMUSH](https://github.com/pennmush/pennmush),
+[RhostMUSH](https://github.com/RhostMUSH/trunk), and
+[TinyMUX](https://github.com/brazilofmux/tinymux)  mushcode.
 
 
 ![Alt](media/example.png "Example capture")

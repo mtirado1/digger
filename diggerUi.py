@@ -216,6 +216,9 @@ class Ui_MainWindow(object):
 		self.actionExport = QtGui.QAction(MainWindow)
 		self.actionExport.setObjectName(_fromUtf8("actionExport"))
 		self.actionExport.setShortcut("Ctrl+E")
+		self.actionExportToFile = QtGui.QAction(MainWindow)
+		self.actionExportToFile.setObjectName(_fromUtf8("actionExportToFile"))
+		self.actionExportToFile.setShortcut("Ctrl+F")
 		self.actionNew = QtGui.QAction(MainWindow)
 		self.actionNew.setObjectName(_fromUtf8("actionNew"))
 		self.actionNew.setShortcut("Ctrl+N")
@@ -252,6 +255,8 @@ class Ui_MainWindow(object):
 		self.menuFile.addAction(self.actionSaveAs)
 		self.menuFile.addSeparator()
 		self.menuFile.addAction(self.actionExport)
+		self.menuFile.addAction(self.actionExportToFile)
+
 
 		self.menuEdit.addAction(self.actionNewRoom)
 		self.menuEdit.addAction(self.actionNewExit)
@@ -286,6 +291,7 @@ class Ui_MainWindow(object):
 		self.actionNewExit.setText(_translate("MainWindow", "Add &Exit", None))
 		self.actionNewLabel.setText(_translate("MainWindow", "Add &Label", None))
 
+		self.actionExportToFile.setText(_translate("MainWindow", "Export to &File", None))
 		self.actionExport.setText(_translate("MainWindow", "&Export", None))
 		self.actionNew.setText(_translate("MainWindow", "&New", None))
 		self.actionOpen.setText(_translate("MainWindow", "&Open", None))

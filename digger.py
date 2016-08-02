@@ -34,6 +34,7 @@ class Main(QtGui.QMainWindow):
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi(self)
 		self.ui.actionExport.triggered.connect(self.exportDump)
+		self.ui.actionExportToFile.triggered.connect(exportCodeToFile)
 		self.ui.actionNew.triggered.connect(self.newFile)
 		self.ui.actionOptions.triggered.connect(self.setOptions)
 		self.ui.actionAbout.triggered.connect(self.viewAbout)
@@ -203,6 +204,7 @@ class Main(QtGui.QMainWindow):
 				global roomList
 				for x in xrange(len(roomList)):
 					roomList[x].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
+
 
 	def exportDump(self):
 		exportWindow = exportClass(self)
