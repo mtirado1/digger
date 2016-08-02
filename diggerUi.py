@@ -75,6 +75,7 @@ class mapView(QtGui.QGraphicsView):
 		global roomList
 		global exitList
 		global id_exit
+		global labelList
 		eventPos = QPoint(event.x(), event.y())
 		scenePos = self.mapToScene(eventPos)
 		QGraphicsView.mousePressEvent(self, event)
@@ -83,20 +84,24 @@ class mapView(QtGui.QGraphicsView):
 			for iRoom in roomList:
 				if self.isWithin(scenePos.x(), iRoom.x, ROOM_SIZE) and self.isWithin(scenePos.y(), iRoom.y, ROOM_SIZE):
 					check = 1
-					self.parent().openExitName(self.source, iRoom.id)
+					self.parent().openExitName(roomList[self.source].id, iRoom.id)
 					self.parent().ui.scene.removeItem(self.tempLine)
 					break
 			if check == 0:
 				self.parent().ui.scene.removeItem(self.tempLine)
 			self.joinExit = 0
-		else:
-			check = 0
-			for iRoom in roomList:
+		else: # Pan scene across graphicsView
+			check = False
+			for iRoom in roomList: # Is the cursor over a room?
 				if self.isWithin(scenePos.x(), iRoom.x, ROOM_SIZE) and self.isWithin(scenePos.y(), iRoom.y, ROOM_SIZE): # Pan View
-					check = 1
+					check = True
 					break
-			if event.button() == Qt.LeftButton and check == 0:
-				self.isPanning = True
+			for iLabel in labelList: # Is the cursor over a label?
+				if self.isWithin(scenePos.x(), iLabel.x, iLabel.box.boundingRect().width()) and self.isWithin(scenePos.y(), iLabel.y, iLabel.box.boundingRect().height()):
+					check = True
+					break
+			if event.button() == Qt.LeftButton and not check:
+				self.isPanning = True # Start panning
 				self.oldPos = event.pos()
 
 	def contextMenuEvent(self, event):

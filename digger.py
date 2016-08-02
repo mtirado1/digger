@@ -39,11 +39,11 @@ class Main(QtGui.QMainWindow):
 		self.ui.actionAbout.triggered.connect(self.viewAbout)
 		self.ui.actionOpen.triggered.connect(self.openFile)
 		self.ui.actionSave.triggered.connect(self.saveFile)
-		self.ui.actionToggleText.triggered.connect(self.toggleText)
+		self.ui.actionToggleText.triggered.connect(self.drawAll)
 		self.ui.actionResetZoom.triggered.connect(self.ui.graphicsView.resetZoom)
 		self.ui.actionSaveAs.triggered.connect(self.saveFileAs)
 		self.ui.actionNewRoom.triggered.connect(lambda: self.digRoom(self.ui.scene.width()/2, self.ui.scene.height()/2))
-		self.ui.actionNewExit.triggered.connect(lambda: self.openExit(self.ui.scene.width()/2, self.ui.scene.height()/2))
+		self.ui.actionNewExit.triggered.connect(self.openExit)
 		self.ui.actionNewLabel.triggered.connect(lambda: self.addLabel(self.ui.scene.width()/2, self.ui.scene.height()/2))
 
 		self.isNewFile = 1
@@ -52,9 +52,7 @@ class Main(QtGui.QMainWindow):
 		self.ui.scene.setBackgroundBrush(QColor(self.bColor))
 		self.roomBColor = diggerconf.roomColor
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
-	
-	def toggleText(self):
-		self.drawAll()
+
 
 	def readMapNode(self, element):
 		global roomList
@@ -336,11 +334,11 @@ class Main(QtGui.QMainWindow):
 		global exitList
 		exitDialog = newExitName()
 		if exitDialog.exec_():
-			exitList.append(Exit(exitDialog.le.text(), findNewId(exitList), roomList[source].id))
+			exitList.append(Exit(exitDialog.le.text(), findNewId(exitList), source))
 			exitList[-1].dest = destination
 			self.ui.scene.addItem(exitList[-1].line)
 			if exitDialog.checkBox.isChecked():
-				exitList.append(Exit(exitDialog.le2.text(), findNewId(exitList), roomList[destination].id))
+				exitList.append(Exit(exitDialog.le2.text(), findNewId(exitList), destination))
 				exitList[-1].dest = source
 				self.ui.scene.addItem(exitList[-1].line)
 		self.drawAll()
