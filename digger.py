@@ -40,6 +40,7 @@ class Main(QtGui.QMainWindow):
 		self.ui.actionOpen.triggered.connect(self.openFile)
 		self.ui.actionSave.triggered.connect(self.saveFile)
 		self.ui.actionToggleText.triggered.connect(self.toggleText)
+		self.ui.actionResetZoom.triggered.connect(self.ui.graphicsView.resetZoom)
 		self.ui.actionSaveAs.triggered.connect(self.saveFileAs)
 		self.ui.actionNewRoom.triggered.connect(lambda: self.digRoom(self.ui.scene.width()/2, self.ui.scene.height()/2))
 		self.ui.actionNewExit.triggered.connect(lambda: self.openExit(self.ui.scene.width()/2, self.ui.scene.height()/2))

@@ -30,20 +30,27 @@ class mapView(QtGui.QGraphicsView):
 		self.isPanning = False
 		self.tempLine = QGraphicsLineItem()
 		self.setMouseTracking(True)
+		self.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
+		self.setResizeAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
 		self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 		self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 		self.zoomFactor = 1
 
+	def resetZoom(self):
+		self.scale(1.0/self.zoomFactor, 1.0/self.zoomFactor)
+		self.zoomFactor = 1
+
 	def wheelEvent(self, event):
 		factor = -event.delta() // 120
-		if factor == 1:
+		if factor == 1: # Zoom in
 			factor = 1.25
-		elif factor == -1:
-			factor = 0.8
-
-		if self.parent().ui.scene.width()*self.zoomFactor*factor >= self.parent().ui.scene.width():
 			self.zoomFactor *= factor
 			self.scale(factor, factor)
+		elif factor == -1: # Zoom out
+			factor = 0.8
+			if self.parent().ui.scene.width()*self.zoomFactor != self.width() and self.parent().ui.scene.width()*self.zoomFactor*factor >= self.width():
+				self.zoomFactor *= factor
+				self.scale(factor, factor)
 
 	def isWithin(self, a, b, r):
 		#Checks if a is within b+r and b-r
@@ -218,7 +225,10 @@ class Ui_MainWindow(object):
 		self.actionSaveAs.setShortcut("Ctrl+Shift+S")
 		self.actionToggleText = QtGui.QAction(MainWindow, checkable=True)
 		self.actionToggleText.setChecked(True)
-		self.actionSave.setObjectName(_fromUtf8("actionToggleText"))
+		self.actionToggleText.setObjectName(_fromUtf8("actionToggleText"))
+
+		self.actionResetZoom = QtGui.QAction(MainWindow)
+		self.actionResetZoom.setObjectName(_fromUtf8("actionResetZoom"))
 
 		self.actionNewRoom = QtGui.QAction(MainWindow)
 		self.actionNewRoom.setObjectName(_fromUtf8("actionNewRoom"))
@@ -243,6 +253,7 @@ class Ui_MainWindow(object):
 		self.menuEdit.addAction(self.actionNewLabel)
 
 		self.menuView.addAction(self.actionToggleText)
+		self.menuView.addAction(self.actionResetZoom)
 
 		self.menubar.addAction(self.menuFile.menuAction())
 		self.menubar.addAction(self.menuEdit.menuAction())
@@ -276,3 +287,4 @@ class Ui_MainWindow(object):
 		self.actionSave.setText(_translate("MainWindow", "&Save", None))
 		self.actionSaveAs.setText(_translate("MainWindow", "Save As", None))
 		self.actionToggleText.setText(_translate("MainWindow", "Show details", None))
+		self.actionResetZoom.setText(_translate("MainWindow", "Reset Zoom", None))
