@@ -1,3 +1,4 @@
+import os
 import sys
 import diggerconf
 from PyQt4.QtCore import *
@@ -216,22 +217,41 @@ def generateCode():
 		strExport += "@dig/teleport " + k.name + "\n"
 		if k.desc != "":
 			strExport += "@desc here=" + mushEscape(str(k.desc)) + "\n"
-		strExport += "think set(me, room_id" + str(k.id) + ":%l)\n"
-		for codeLine in k.code:
-			strExport += codeLine + "\n"
-		for j in exitList:
-			if j.source == k.id:
-				aliasString = ""
-				for x in j.alias:
-					aliasString += ";" + x
-				if j.dest != -1:
-					strExport += "@open " + j.name + aliasString + "=[v(room_id" + str(j.dest) +  ")]\n"
+		strExport += "think set(me, " + diggerconf.attributePrefix + str(k.id) + ":%l)\n"
+		if diggerconf.enableImports:
+			for codeLine in k.code:
+				codeWords = codeLine.split()
+				if codeWords[0] == "@@@" and codeWords[1] == "import":
+					fname = str(" ".join(codeWords[2:]))
+					if os.path.isfile(fname):
+						strExport += "@@ Import file: " + fname + "\n"
+						with open(str(fname), 'r') as codeFile:
+							strExport += codeFile.read() + "\n"
+					else:
+						strExport += "@@ Import file: " + fname + " not found.\n"
 				else:
-					strExport += "@open " + j.name + aliasString + "\n"
-				if j.desc != "":
-					strExport += "@desc " + j.name + "=" + mushEscape(str(j.desc)) + "\n"
-	for k in roomList:
-		strExport += "&room_id" + str(k.id) + " me\n"
+					strExport += codeLine + "\n"
+		else:
+			for codeLine in k.code:
+				strExport += codeLine + "\n"
+	for k in exitList:
+		aliasString = ""
+		for x in k.alias:
+			aliasString += ";" + x
+		strExport += "@tel [v(" + diggerconf.attributePrefix + str(k.source) + ")]\n"
+		if k.dest != -1:
+			strExport += "@open " + k.name + aliasString + "=[v(" + diggerconf.attributePrefix + str(k.dest) + ")]\n"
+		else:
+			strExport += "@open " + k.name + aliasString + "\n"
+		if k.desc != "":
+			strExport += "@desc " + k.name + "=" + mushEscape(str(k.desc)) + "\n"
+
+	if diggerconf.clearAttributes:
+		for k in roomList:
+			strExport += "&" + diggerconf.attributePrefix  + str(k.id) + " me\n"
+	if diggerconf.exportLabels:
+		for k in labelList:
+			strExport += "think LABEL: *** " + k.normalText + " ***\n"
 	return strExport
 
 def exportCodeToFile():
@@ -250,7 +270,12 @@ class exportClass(QDialog):
 		self.setWindowTitle("Export")
 		self.browser = QTextBrowser(self)
 		self.browser.setGeometry(QRect(0, 0, 500, 500))
-
+		if diggerconf.monospaceEdit:
+			self.browser.setFontFamily("Monospace")
+		layout = QVBoxLayout(self)
+		layout.setContentsMargins(0, 0, 0, 0)
+		layout.addWidget(self.browser)
+		self.setLayout(layout)
 	def exportAll(self):
 		self.browser.setText(generateCode())
 
@@ -343,6 +368,10 @@ class editRoom(QDialog):
 		layout3.addRow(self.lblCode)
 		layout3.addRow(self.te2)
 		self.tabCode.setLayout(layout3)
+
+		if diggerconf.monospaceEdit:
+			self.te.setFontFamily("Monospace")
+			self.te2.setFontFamily("Monospace")
 
 	def setData(self, room):
 		self.le.setText(roomList[room].name)
@@ -454,6 +483,9 @@ class editExit(QDialog):
 		self.tabDesc.setLayout(layout3)
 
 		self.btn1.clicked.connect(self.accept)
+
+		if diggerconf.monospaceEdit:
+			self.te1.setFontFamily("Monospace")
 
 	def setData(self):
 		global exitList

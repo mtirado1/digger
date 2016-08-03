@@ -285,6 +285,8 @@ class Main(QtGui.QMainWindow):
 			roomList[-1].y = y_
 			roomList[-1].bColor = self.roomBColor
 			roomList[-1].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
+			for codeLine in diggerconf.roomCode:
+				roomList[-1].code.append(str(codeLine))
 			self.ui.scene.addItem(roomList[-1].box)
 			self.ui.scene.addItem(roomList[-1].text)
 			self.drawAll()
@@ -359,7 +361,7 @@ class Main(QtGui.QMainWindow):
 			codeList = editDialog.te2.toPlainText().split("\n")
 			roomList[index].code = []
 			for codeLine in codeList:
-				roomList[index].code.append(codeLine)
+				roomList[index].code.append(str(codeLine))
 
 			self.drawAll()
 			editDialog.close()

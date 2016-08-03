@@ -7,6 +7,7 @@ Digger can export worlds to [PennMUSH](https://github.com/pennmush/pennmush),
 [RhostMUSH](https://github.com/RhostMUSH/trunk), and
 [TinyMUX](https://github.com/brazilofmux/tinymux)  mushcode.
 
+* * *
 
 ![Alt](media/example.png "Example capture")
 
@@ -15,6 +16,10 @@ Digger can export worlds to [PennMUSH](https://github.com/pennmush/pennmush),
 * Create, edit and describe individual rooms.
 
 	* Rooms can be color coded
+
+	* Execute custom mushcode on rooms
+
+	* Import mushcode files to your worlds
 
 * Connect rooms with exits
 
@@ -27,6 +32,8 @@ Digger can export worlds to [PennMUSH](https://github.com/pennmush/pennmush),
 * Labels
 
 	* Add titles; store notes, TODOs, and more.
+
+	* Labels can be exported as messages to the player
 
 
 ## Running
