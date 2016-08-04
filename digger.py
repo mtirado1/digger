@@ -59,9 +59,12 @@ class Main(QtGui.QMainWindow):
 		global roomList
 		global exitList
 		global labelList
-
+		load_map_width = 0
+		load_map_height = 0
 		def getText(element):
-			return element.childNodes[0].data
+			if element.childNodes:
+				return element.childNodes[0].data
+			return "" # Empty tag
 
 		def readLabelNode(element):
 			load_label_x = int(element.getAttribute("x"))
@@ -70,7 +73,7 @@ class Main(QtGui.QMainWindow):
 			labelList.append(Label(load_label_text, load_label_x, load_label_y))
 			self.ui.scene.addItem(labelList[-1].text)
 			self.ui.scene.addItem(labelList[-1].box)
-			labelList[-1].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
+			labelList[-1].box.move_restrict_rect = QRectF(0, 0, load_map_width, load_map_height)
 		def readRoomNode(element):
 			load_room_id = int(element.getAttribute("id"))
 			load_room_x = int(element.getAttribute("x"))
@@ -90,7 +93,7 @@ class Main(QtGui.QMainWindow):
 			roomList[-1].bColor = load_room_bcolor
 			roomList[-1].code = load_room_code
 			self.ui.scene.addItem(roomList[-1].box)
-			roomList[-1].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
+			roomList[-1].box.move_restrict_rect = QRectF(0, 0, load_map_width, load_map_height)
 			self.ui.scene.addItem(roomList[-1].text)
 
 		def readExitNode(element):
