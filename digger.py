@@ -382,6 +382,7 @@ class Main(QtGui.QMainWindow):
 			exitList[index].alias = []
 			for x in xrange(editDialog.list1.count()):
 				exitList[index].alias.append(editDialog.list1.item(x).text())
+			self.drawAll()
 
 	def addLabel(self, x_, y_):
 		labelDialog = addLabel()
