@@ -59,7 +59,7 @@ class mapView(QtGui.QGraphicsView):
 	def mouseMoveEvent(self, event):
 		QGraphicsView.mouseMoveEvent(self, event)
 		if self.joinExit == 1:
-			self.tempLine.setLine(roomList[self.source].x + ROOM_CENTER, roomList[self.source].y + ROOM_CENTER, self.mapToScene(event.x(), event.y()).x(), self.mapToScene(event.x(), event.y()).y())
+			self.tempLine.setLine(roomList[self.source].x + diggerconf.roomCenter, roomList[self.source].y + diggerconf.roomCenter, self.mapToScene(event.x(), event.y()).x(), self.mapToScene(event.x(), event.y()).y())
 		elif self.isPanning == True:
 			self.newPos = event.pos() - self.oldPos
 			self.oldPos = event.pos()
@@ -82,7 +82,7 @@ class mapView(QtGui.QGraphicsView):
 		if self.joinExit == 1:
 			check = 0
 			for iRoom in roomList:
-				if self.isWithin(scenePos.x(), iRoom.x, ROOM_SIZE) and self.isWithin(scenePos.y(), iRoom.y, ROOM_SIZE):
+				if self.isWithin(scenePos.x(), iRoom.x, diggerconf.roomSize) and self.isWithin(scenePos.y(), iRoom.y, diggerconf.roomSize):
 					check = 1
 					self.parent().openExitName(roomList[self.source].id, iRoom.id)
 					self.parent().ui.scene.removeItem(self.tempLine)
@@ -93,7 +93,7 @@ class mapView(QtGui.QGraphicsView):
 		else: # Pan scene across graphicsView
 			check = False
 			for iRoom in roomList: # Is the cursor over a room?
-				if self.isWithin(scenePos.x(), iRoom.x, ROOM_SIZE) and self.isWithin(scenePos.y(), iRoom.y, ROOM_SIZE): # Pan View
+				if self.isWithin(scenePos.x(), iRoom.x, diggerconf.roomSize) and self.isWithin(scenePos.y(), iRoom.y, diggerconf.roomSize): # Pan View
 					check = True
 					break
 			for iLabel in labelList: # Is the cursor over a label?
@@ -119,7 +119,7 @@ class mapView(QtGui.QGraphicsView):
 			return
 
 		for i in range(len(roomList)):
-			if self.isWithin(self.mapToScene(eventPos).x(), roomList[i].x, ROOM_SIZE) and self.isWithin(self.mapToScene(eventPos).y(), roomList[i].y, ROOM_SIZE):
+			if self.isWithin(self.mapToScene(eventPos).x(), roomList[i].x, diggerconf.roomSize) and self.isWithin(self.mapToScene(eventPos).y(), roomList[i].y, diggerconf.roomSize):
 				objectClicked = i
 				check = 1
 		if check == 0:

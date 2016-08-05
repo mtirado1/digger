@@ -8,6 +8,8 @@ attributePrefix = "ROOM.ID."
 
 mapWidth  = 1065
 mapHeight = 628
+roomSize = 31
+roomCenter = 15
 
 enableImports = False
 monospaceEdit = True
@@ -29,6 +31,8 @@ def loadConfigFile(): # Load and store configuration variables
 	global exportLabels
 	global clearAttributes
 	global attributePrefix
+	global roomSize
+	global roomCenter
 	fname = "digger.conf"
 	if not os.path.exists(fname): # File exists?
 		print("Config file " + fname + " not found. Using default values")
@@ -61,4 +65,10 @@ def loadConfigFile(): # Load and store configuration variables
 					attributePrefix = words[1]
 				elif words[0] == "clear_attrs":
 					clearAttributes = toBoolean(words[1])
+				elif words[0] == "room_size":
+					size = int(words[1])
+					if size % 2 != 0:
+						size += 1
+					roomSize = size
+					roomCenter = (size - 1) / 2
 	print("Successfully loaded config options")

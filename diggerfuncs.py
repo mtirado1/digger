@@ -7,28 +7,10 @@ from PyQt4.QtGui import *
 __version__ = "1.2.1"
 
 #######################################
-# Some constants
-
-ROOM_SIZE = 31 # odd number
-ROOM_CENTER = (ROOM_SIZE - 1) / 2
-
-#######################################
-# Global Lists and id references
+# Global Lists
 roomList = []
 exitList = []
 labelList = []
-id_label = 0
-
-
-def midPoint(x1, x2):
-	return (x1 + x2) / 2
-
-def is_number(s):
-	try:
-		int(s)
-		return True
-	except ValueError:
-		return False
 
 def mushUnEscape(str):
 	retStr = ""
@@ -200,17 +182,6 @@ class Label:
 		self.normalText = text_
 		self.text.setHtml("<p>" + self.normalText + "</p>")
 
-class textDialog(QDialog):
-	def __init__(self, title, text, parent = None):
-		super(textDialog, self).__init__(parent)
-		layout = QFormLayout()
-		self.lbl = QLabel(text)
-		layout.addRow(self.lbl)
-		self.setLayout(layout)
-		self.setWindowTitle(title)
-		self.btn1 = QPushButton("Ok")
-		layout.addRow(self.btn1)
-		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
 
 def generateCode():
 	def isCode(codelist):
@@ -303,14 +274,16 @@ class optionsClass(QDialog):
 		self.lbl3 = QLabel("Height")
 		self.lbl4 = QLabel("Background Color")
 		self.lbl5 = QLabel("Default room color")
-		self.le = QLineEdit()
-		self.le2 = QLineEdit()
+		self.sp = QSpinBox()
+		self.sp.setRange(200, 10000)
+		self.sp2 = QSpinBox()
+		self.sp2.setRange(200, 10000)
 		self.le3 = QLineEdit()
 		self.le4 = QLineEdit()
 		self.btn1 = QPushButton("Ok")
 		layout.addRow(self.lbl)
 		layout.addRow(self.lbl2, self.lbl3)
-		layout.addRow(self.le, self.le2)
+		layout.addRow(self.sp, self.sp2)
 		layout.addRow(self.lbl4)
 		layout.addRow(self.le3)
 		layout.addRow(self.lbl5)
@@ -319,8 +292,8 @@ class optionsClass(QDialog):
 		self.setLayout(layout)
 		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
 	def setData(self):
-		self.le.setText(str(int(self.parent().ui.scene.width())))
-		self.le2.setText(str(int(self.parent().ui.scene.height())))
+		self.sp.setValue(int(self.parent().ui.scene.width()))
+		self.sp2.setValue(int(self.parent().ui.scene.height()))
 		self.le3.setText(str(self.parent().bColor))
 		self.le4.setText(str(self.parent().roomBColor))
 
