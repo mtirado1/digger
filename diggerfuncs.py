@@ -118,7 +118,7 @@ class labelBox(QGraphicsRectItem):
 	def mouseReleaseEvent(self, event):
 		if self.moved == 1:
 			QGraphicsRectItem.mouseReleaseEvent(self, event)
-			self.scene().parent().parent().drawAll()
+			self.scene().parent().parent().drawLabel(labelList[self.index])
 		self.moved = 0
 
 	def mouseMoveEvent(self, event):
@@ -143,7 +143,7 @@ class roomBox(QGraphicsRectItem):
 	def mouseReleaseEvent(self, event):
 		if self.moved == 1:
 			QGraphicsRectItem.mouseReleaseEvent(self, event)
-			self.scene().parent().parent().drawAll()
+			self.scene().parent().parent().drawRoom(roomList[self.index])
 		self.moved = 0
 
 	def mouseMoveEvent(self, event):
@@ -512,7 +512,10 @@ class editExit(QDialog):
 	def fillData(self, exit):
 		self.le.setText(exitList[exit].name)
 		self.combo1.setCurrentIndex(self.combo1.findText("#" + str(exitList[exit].source) + ": " + roomList[exitList[exit].source].name))
-		self.combo2.setCurrentIndex(self.combo2.findText("#" + str(exitList[exit].dest) + ": " + roomList[exitList[exit].dest].name))
+		if exitList[exit].dest == -1:
+			self.combo2.setCurrentIndex(0)
+		else:
+			self.combo2.setCurrentIndex(self.combo2.findText("#" + str(exitList[exit].dest) + ": " + roomList[exitList[exit].dest].name))
 		self.te1.setPlainText(exitList[exit].desc)
 		for x in exitList[exit].alias:
 			self.list1.addItem(x)

@@ -40,7 +40,7 @@ class Main(QtGui.QMainWindow):
 		self.ui.actionAbout.triggered.connect(self.viewAbout)
 		self.ui.actionOpen.triggered.connect(self.openFile)
 		self.ui.actionSave.triggered.connect(self.saveFile)
-		self.ui.actionToggleText.triggered.connect(self.drawAll)
+		self.ui.actionToggleText.triggered.connect(self.toggleText)
 		self.ui.actionResetZoom.triggered.connect(self.ui.graphicsView.resetZoom)
 		self.ui.actionSaveAs.triggered.connect(self.saveFileAs)
 		self.ui.actionNewRoom.triggered.connect(lambda: self.digRoom(self.ui.scene.width()/2, self.ui.scene.height()/2))
@@ -54,6 +54,9 @@ class Main(QtGui.QMainWindow):
 		self.roomBColor = diggerconf.roomColor
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 
+	def toggleText(self):
+		for room in roomList:
+			self.drawRoom(room)
 
 	def readMapNode(self, element):
 		global roomList
@@ -228,54 +231,78 @@ class Main(QtGui.QMainWindow):
 		del labelList[:]
 		self.ui.scene.clear()
 
-	def drawAll(self):
-		global roomList
-		global exitList
-		global labelList
-		def getPosOfRoom(room_id_):
-			for x in xrange(len(roomList)):
-				if roomList[x].id == room_id_:
-					return x
-		for x in xrange(len(exitList)):
-			self.ui.scene.removeItem(exitList[x].line)
-			coord_a = roomList[getPosOfRoom(exitList[x].source)].x + ROOM_CENTER
-			coord_b = roomList[getPosOfRoom(exitList[x].source)].y + ROOM_CENTER
-			if exitList[x].dest == -1:
-				coord_c = roomList[getPosOfRoom(exitList[x].source)].x + 3 * ROOM_CENTER
-				coord_d = roomList[getPosOfRoom(exitList[x].source)].y + 3 * ROOM_CENTER
-			else:
-				coord_c = roomList[getPosOfRoom(exitList[x].dest)].x + ROOM_CENTER
-				coord_d = roomList[getPosOfRoom(exitList[x].dest)].y + ROOM_CENTER
+	def getPosOfRoom(self, room_id_):
+		for x in roomList:
+			if x.id == room_id_:
+				return x
+		return None
 
-			exitList[x].line.setLine(coord_a, coord_b, coord_c, coord_d)
-			self.ui.scene.addItem(exitList[x].line)
-			exitList[x].line.setZValue(0)
-		for j in xrange(len(roomList)):
-			self.ui.scene.removeItem(roomList[j].box)
-			self.ui.scene.removeItem(roomList[j].text)
-			roomList[j].box.setPos(roomList[j].x, roomList[j].y)
-			roomList[j].box.index=j
-			roomString = "<p><b>" + roomList[j].name + "</b>"
-			roomString = roomString + "<br />Exits:<br />"
-			for k in xrange(len(exitList)):
-				if exitList[k].source == roomList[j].id:
-					roomString = roomString + Qt.escape(exitList[k].name) + "<br />"
-			if self.ui.actionToggleText.isChecked():
-				roomList[j].text.setHtml(roomString + "</p>")
-			else:
-				roomList[j].text.setHtml("")
-			roomList[j].text.setPos(QPointF(roomList[j].x + ROOM_CENTER + 2 - (roomList[j].text.boundingRect().width() / 2), roomList[j].y + ROOM_SIZE + 5))
-			roomList[j].box.setBrush(QColor(roomList[j].bColor))
-			roomList[j].box.setRect(0, 0, ROOM_SIZE, ROOM_SIZE)
-			self.ui.scene.addItem(roomList[j].box)
-			self.ui.scene.addItem(roomList[j].text)
-			roomList[j].box.setZValue(1)
-		for j in xrange(len(labelList)):
-			labelList[j].box.index = j
-			labelList[j].text.setZValue(10)
-			labelList[j].box.setZValue(9)
-			labelList[j].text.setPos(labelList[j].x, labelList[j].y)
-			labelList[j].box.setPos(labelList[j].x, labelList[j].y)
+	def drawAll(self): # Draw all items, only used when opening files
+		for r in roomList:
+			self.drawRoom(r)
+		for e in exitList:
+			self.drawExit(e)
+		for l in labelList:
+			self.drawLabel(l)
+
+	def drawRoom(self, room):
+		if not room:
+			return
+		global roomList
+		room.box.setPos(room.x, room.y)
+		room.box.index=roomList.index(room)
+
+		roomString = "<p><b>" + room.name + "</b>"
+		roomString += "<br />Exits:<br />"
+		for k in exitList:
+			if k.source == room.id:
+				coord_a = room.x + ROOM_CENTER
+				coord_b = room.y + ROOM_CENTER
+				if k.dest == -1:
+					coord_c = coord_a + 2 * ROOM_CENTER
+					coord_d = coord_b + 2 * ROOM_CENTER
+				else:
+					coord_c = k.line.line().x2()
+					coord_d = k.line.line().y2()
+				k.line.setLine(coord_a, coord_b, coord_c, coord_d)
+				roomString += Qt.escape(k.name) + "<br />"
+			elif k.dest == room.id:
+				coord_c = room.x + ROOM_CENTER
+				coord_d = room.y + ROOM_CENTER
+				coord_a = k.line.line().x1()
+				coord_b = k.line.line().y1()
+				k.line.setLine(coord_a, coord_b, coord_c, coord_d)
+		if self.ui.actionToggleText.isChecked():
+			room.text.setHtml(roomString + "</p>")
+		else:
+			room.text.setHtml("")
+		room.text.setPos(QPointF(room.x + ROOM_CENTER + 2 - (room.text.boundingRect().width() / 2), room.y + ROOM_SIZE + 5))
+		room.box.setBrush(QColor(room.bColor))
+		room.box.setRect(0, 0, ROOM_SIZE, ROOM_SIZE)
+		room.box.setZValue(1)
+
+
+	def drawExit(self, exit):
+		global exitList
+
+		coord_a = self.getPosOfRoom(exit.source).x + ROOM_CENTER
+		coord_b = self.getPosOfRoom(exit.source).y + ROOM_CENTER
+		if exit.dest == -1:
+			coord_c = coord_a + 2 * ROOM_CENTER
+			coord_d = coord_b + 2 * ROOM_CENTER
+		else:
+			coord_c = self.getPosOfRoom(exit.dest).x + ROOM_CENTER
+			coord_d = self.getPosOfRoom(exit.dest).y + ROOM_CENTER
+		exit.line.setLine(coord_a, coord_b, coord_c, coord_d)
+		exit.line.setZValue(0)
+
+	def drawLabel(self, label):
+		global labelList
+		label.box.index = labelList.index(label)
+		label.text.setZValue(10)
+		label.box.setZValue(9)
+		label.text.setPos(label.x, label.y)
+		label.box.setPos(label.x, label.y)
 
 	def digRoom(self, x_, y_):
 		global roomList
@@ -292,7 +319,7 @@ class Main(QtGui.QMainWindow):
 				roomList[-1].code.append(str(codeLine))
 			self.ui.scene.addItem(roomList[-1].box)
 			self.ui.scene.addItem(roomList[-1].text)
-			self.drawAll()
+			self.drawRoom(roomList[-1])
 			roomDialog.close()
 
 	def deleteRoom(self, index):
@@ -314,8 +341,8 @@ class Main(QtGui.QMainWindow):
 		for x in xrange(len(exitList)): # Next round, fix all destinations
 			if exitList[x].dest == roomList[index].id: # The exits still exists, but without destination
 				exitList[x].dest = -1
+				self.drawExit(exitList[x])
 		del roomList[index]
-		self.drawAll()
 
 	def openExit(self):
 		exitDialog = editExit(self)
@@ -333,8 +360,9 @@ class Main(QtGui.QMainWindow):
 					exitList[-1].alias.append(exitDialog.list1.item(x).text())
 
 			self.ui.scene.addItem(exitList[-1].line)
-			self.drawAll()
-			exitDialog.close()
+			self.drawExit(exitList[-1])
+			self.drawRoom(self.getPosOfRoom(exitList[-1].source))
+			self.drawRoom(self.getPosOfRoom(exitList[-1].dest))
 
 	def openExitName(self, source, destination):
 		global roomList
@@ -343,13 +371,15 @@ class Main(QtGui.QMainWindow):
 		if exitDialog.exec_():
 			exitList.append(Exit(exitDialog.le.text(), findNewId(exitList), source))
 			exitList[-1].dest = destination
+			self.drawExit(exitList[-1])
 			self.ui.scene.addItem(exitList[-1].line)
 			if exitDialog.checkBox.isChecked():
 				exitList.append(Exit(exitDialog.le2.text(), findNewId(exitList), destination))
 				exitList[-1].dest = source
+				self.drawExit(exitList[-1])
 				self.ui.scene.addItem(exitList[-1].line)
-		self.drawAll()
-
+		self.drawRoom(self.getPosOfRoom(source))
+		self.drawRoom(self.getPosOfRoom(destination))
 
 	def editRoomProperties(self, index):
 		editDialog = editRoom()
@@ -365,8 +395,8 @@ class Main(QtGui.QMainWindow):
 			roomList[index].code = []
 			for codeLine in codeList:
 				roomList[index].code.append(str(codeLine))
-
-			self.drawAll()
+			# Draw ONLY the modified room
+			self.drawRoom(roomList[index])
 			editDialog.close()
 
 	def editExitProperties(self, index):
@@ -382,7 +412,10 @@ class Main(QtGui.QMainWindow):
 			exitList[index].alias = []
 			for x in xrange(editDialog.list1.count()):
 				exitList[index].alias.append(editDialog.list1.item(x).text())
-			self.drawAll()
+			# Draw ONLY the modified exit and the affected rooms
+			self.drawExit(exitList[index])
+			self.drawRoom(self.getPosOfRoom(exitList[index].source))
+			self.drawRoom(self.getPosOfRoom(exitList[index].dest))
 
 	def addLabel(self, x_, y_):
 		labelDialog = addLabel()
@@ -394,14 +427,21 @@ class Main(QtGui.QMainWindow):
 			self.ui.scene.addItem(labelList[-1].text)
 			self.ui.scene.addItem(labelList[-1].box)
 			labelList[-1].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
-			self.drawAll()
+			self.drawLabel(labelList[-1])
 			labelDialog.close()
+
 	def deleteLabel(self, id_):
 		global labelList
 		self.ui.scene.removeItem(labelList[id_].text)
 		self.ui.scene.removeItem(labelList[id_].box)
 		del labelList[id_]
-		self.drawAll()
+	def deleteLabelProperties(self, id_):
+		editDialog = addLabel()
+		editDialog.setWindowTitle("Edit Label")
+		editDialog.le.setText(labelList[objectClicked].normalText)
+		if editDialog.exec_():
+			labelList[objectClicked].setText(editDialog.le.text())
+			labelList[objectClicked].box.setRect(0, 0, labelList[objectClicked].text.boundingRect().width(), labelList[objectClicked].text.boundingRect().height())
 
 
 if __name__ == "__main__":
