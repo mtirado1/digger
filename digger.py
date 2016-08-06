@@ -47,6 +47,12 @@ class Main(QtGui.QMainWindow):
 		self.ui.actionNewExit.triggered.connect(self.openExit)
 		self.ui.actionNewLabel.triggered.connect(lambda: self.addLabel(self.ui.scene.width()/2, self.ui.scene.height()/2))
 
+		self.statusRoom = QLabel("")
+		self.ui.statusbar.addWidget(self.statusRoom)
+		self.statusExit = QLabel("")
+		self.ui.statusbar.addWidget(self.statusExit)
+		self.statusLabel = QLabel("")
+		self.ui.statusbar.addWidget(self.statusLabel)
 		self.isNewFile = 1
 		self.fileName = "Untitled"
 		self.bColor = diggerconf.mapColor
@@ -235,6 +241,24 @@ class Main(QtGui.QMainWindow):
 				return x
 		return None
 
+	def updateStatusRoom(self):
+		if len(roomList) > 0:
+			self.statusRoom.setText("Rooms: " + str(len(roomList)))
+		else:
+			self.statusRoom.setText("")
+
+	def updateStatusExit(self):
+		if len(exitList) > 0:
+			self.statusExit.setText("Exits: " + str(len(exitList)))
+		else:
+			self.statusExit.setText("")
+
+	def updateStatusLabel(self):
+		if len(labelList) > 0:
+			self.statusLabel.setText("Labels: " + str(len(labelList)))
+		else:
+			self.statusLabel.setText("")
+
 	def drawAll(self): # Draw all items, only used when opening files
 		for r in roomList:
 			self.drawRoom(r)
@@ -242,6 +266,9 @@ class Main(QtGui.QMainWindow):
 			self.drawExit(e)
 		for l in labelList:
 			self.drawLabel(l)
+		self.updateStatusRoom()
+		self.updateStatusExit()
+		self.updateStatusLabel()
 
 	def drawRoom(self, room):
 		if not room:
@@ -318,7 +345,7 @@ class Main(QtGui.QMainWindow):
 			self.ui.scene.addItem(roomList[-1].box)
 			self.ui.scene.addItem(roomList[-1].text)
 			self.drawRoom(roomList[-1])
-			roomDialog.close()
+			self.updateStatusRoom()
 
 	def deleteRoom(self, index):
 		global exitList
@@ -328,12 +355,12 @@ class Main(QtGui.QMainWindow):
 		deleted = True
 		while deleted:
 			for x in xrange(len(exitList)): # First round, delete all sources
+				deleted = False
 				if exitList[x].source == roomList[index].id:
 					self.ui.scene.removeItem(exitList[x].line)
 					del exitList[x]
+					deleted = True
 					break
-				else:
-					deleted = False
 			if not exitList:
 				deleted = False
 		for x in xrange(len(exitList)): # Next round, fix all destinations
@@ -341,6 +368,10 @@ class Main(QtGui.QMainWindow):
 				exitList[x].dest = -1
 				self.drawExit(exitList[x])
 		del roomList[index]
+		for x in xrange(len(roomList)):
+			roomList[x].box.index = x
+		self.updateStatusRoom()
+		self.updateStatusExit()
 
 	def openExit(self):
 		exitDialog = editExit(self)
@@ -361,6 +392,7 @@ class Main(QtGui.QMainWindow):
 			self.drawExit(exitList[-1])
 			self.drawRoom(self.getPosOfRoom(exitList[-1].source))
 			self.drawRoom(self.getPosOfRoom(exitList[-1].dest))
+			self.updateStatusExit()
 
 	def openExitName(self, source, destination):
 		global roomList
@@ -378,6 +410,7 @@ class Main(QtGui.QMainWindow):
 				self.ui.scene.addItem(exitList[-1].line)
 		self.drawRoom(self.getPosOfRoom(source))
 		self.drawRoom(self.getPosOfRoom(destination))
+		self.updateStatusExit()
 
 	def editRoomProperties(self, index):
 		editDialog = editRoom()
@@ -427,12 +460,15 @@ class Main(QtGui.QMainWindow):
 			labelList[-1].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
 			self.drawLabel(labelList[-1])
 			labelDialog.close()
+			self.updateStatusLabel()
 
 	def deleteLabel(self, id_):
 		global labelList
 		self.ui.scene.removeItem(labelList[id_].text)
 		self.ui.scene.removeItem(labelList[id_].box)
 		del labelList[id_]
+		self.updateStatusLabel()
+
 	def deleteLabelProperties(self, id_):
 		editDialog = addLabel()
 		editDialog.setWindowTitle("Edit Label")
@@ -440,7 +476,6 @@ class Main(QtGui.QMainWindow):
 		if editDialog.exec_():
 			labelList[objectClicked].setText(editDialog.le.text())
 			labelList[objectClicked].box.setRect(0, 0, labelList[objectClicked].text.boundingRect().width(), labelList[objectClicked].text.boundingRect().height())
-
 
 if __name__ == "__main__":
 	diggerconf.loadConfigFile()
