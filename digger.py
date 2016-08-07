@@ -118,7 +118,7 @@ class Main(QtGui.QMainWindow):
 			for i in element.getElementsByTagName("alias"):
 				load_exit_alias.append(getText(i))
 			exitList.append(Exit(load_exit_name, load_exit_id, load_exit_source))
-			exitList[-1].alias = load_exit_alias
+			exitList[-1].alias = ";".join(load_exit_alias)
 			exitList[-1].dest = load_exit_dest
 			exitList[-1].desc = mushUnEscape(load_exit_desc)
 			self.ui.scene.addItem(exitList[-1].line)
@@ -385,8 +385,10 @@ class Main(QtGui.QMainWindow):
 			exitList[-1].desc = exitDialog.te1.toPlainText()
 
 			if exitDialog.le.text() not in diggerconf.aliasDict: # Don't override alias tab
+				items = []
 				for x in xrange(exitDialog.list1.count()):
-					exitList[-1].alias.append(exitDialog.list1.item(x).text())
+					items.append(exitDialog.list1.item(x).text())
+				exitList[-1].alias = ";".join(items)
 
 			self.ui.scene.addItem(exitList[-1].line)
 			self.drawExit(exitList[-1])
@@ -440,9 +442,11 @@ class Main(QtGui.QMainWindow):
 			exitList[index].source = editDialog.rDict[str(editDialog.combo1.currentText())]
 			exitList[index].dest = editDialog.rDict[str(editDialog.combo2.currentText())]
 			exitList[index].desc = editDialog.te1.toPlainText()
-			exitList[index].alias = []
+			items = []
 			for x in xrange(editDialog.list1.count()):
-				exitList[index].alias.append(editDialog.list1.item(x).text())
+				items.append(editDialog.list1.item(x).text())
+			exitList[-1].alias = ";".join(items)
+
 			# Draw ONLY the modified exit and the affected rooms
 			self.drawExit(exitList[index])
 			self.drawRoom(self.getPosOfRoom(exitList[index].source))

@@ -80,8 +80,8 @@ def saveToFile(fname, parent):
 		stream << "\t\t<name>" << Qt.escape(iExit.name) << "</name>\n"
 		if iExit.desc != "":
 			stream <<"\t\t<description>" << mushEscape(Qt.escape(iExit.desc)) << "</description>\n"
-		for x in xrange(len(iExit.alias)):
-			stream << "\t\t<alias>" << Qt.escape(iExit.alias[x]) << "</alias>\n"
+		if iExit.alias != "":
+			stream << "\t\t<alias>" << Qt.escape(iExit.alias) << "</alias>\n"
 		stream << "\t</exit>\n"
 	for x in xrange(len(labelList)):
 		stream << ("\t<label x='%d' y='%d'>" % (labelList[x].x, labelList[x].y))
@@ -155,7 +155,7 @@ class Exit:
 
 		self.id = id_
 		self.name = name
-		self.alias = []
+		self.alias = ""
 		self.desc = ""
 		self.source = source
 		self.dest = -1
@@ -164,7 +164,9 @@ class Exit:
 			self.name = diggerconf.aliasDict[str(name)][0]
 			for x in xrange(len(diggerconf.aliasDict[str(name)])):
 				if x != 0:
-					self.alias.append(diggerconf.aliasDict[str(name)][x])
+					self.alias += diggerconf.aliasDict[str(name)][x] + ";"
+			self.alias = self.alias[:-1]
+
 class Label:
 	type='label'
 	def __init__(self, text, x_, y_):
@@ -206,8 +208,8 @@ def generateCode():
 			strExport += "@tel [v(" + diggerconf.attributePrefix + str(k.id) + ")]\n"
 		for j in sourceExits:
 			aliasString = ""
-			for x in j.alias:
-				aliasString += ";" + x
+			if j.alias != "":
+				aliasString += ";" + j.alias
 			if j.dest != -1:
 				strExport += "@open " + j.name + aliasString + "=[v(" + diggerconf.attributePrefix + str(j.dest) + ")]\n"
 			else:
@@ -490,7 +492,7 @@ class editExit(QDialog):
 		else:
 			self.combo2.setCurrentIndex(self.combo2.findText("#" + str(exitList[exit].dest) + ": " + roomList[exitList[exit].dest].name))
 		self.te1.setPlainText(exitList[exit].desc)
-		for x in exitList[exit].alias:
+		for x in exitList[exit].alias.split(";"):
 			self.list1.addItem(x)
 
 class addLabel(QDialog):
