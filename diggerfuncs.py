@@ -326,7 +326,7 @@ class editRoom(QDialog):
 		self.tab.addTab(self.tabName, "Name")
 		self.tab.addTab(self.tabDesc, "Description")
 		self.tab.addTab(self.tabCode, "Code")
-
+		self.color = QColor()
 		tabLayout = QFormLayout()
 		tabLayout.addRow(self.tab)
 		tabLayout.addRow(self.btn1)
@@ -339,9 +339,13 @@ class editRoom(QDialog):
 		self.lbl2 = QLabel("Position")
 		self.le2 = QLineEdit()
 		self.le3 = QLineEdit()
+		self.lbl3 = QLabel("Color")
+		self.btnColor = QPushButton("Select...")
+		self.btnColor.clicked.connect(self.openColorDialog)
 		layout.addRow(self.lbl,self.le)
 		layout.addRow(self.lbl2)
 		layout.addRow(self.le2, self.le3)
+		layout.addRow(self.lbl3, self.btnColor)
 		self.tabName.setLayout(layout)
 
 		layout2 = QFormLayout() # Layout for description tab
@@ -361,6 +365,11 @@ class editRoom(QDialog):
 		if diggerconf.monospaceEdit:
 			self.te.setFontFamily("Monospace")
 			self.te2.setFontFamily("Monospace")
+
+	def openColorDialog(self):
+		self.color = QColorDialog.getColor()
+		
+
 
 	def setData(self, room):
 		self.le.setText(roomList[room].name)

@@ -423,7 +423,8 @@ class Main(QtGui.QMainWindow):
 			roomList[index].desc=editDialog.te.toPlainText()
 			roomList[index].x=int(editDialog.le2.text())
 			roomList[index].y=int(editDialog.le3.text())
-
+			if editDialog.color.isValid():
+				roomList[index].bColor = editDialog.color.name()
 			codeList = editDialog.te2.toPlainText().split("\n")
 			roomList[index].code = []
 			for codeLine in codeList:
