@@ -48,6 +48,7 @@ class mapView(QtGui.QGraphicsView):
 			self.scale(factor, factor)
 		elif factor == -1: # Zoom out
 			factor = 0.8
+			#if self.zoomFactor*factor >=1:
 			if self.parent().ui.scene.width()*self.zoomFactor != self.width() and self.parent().ui.scene.width()*self.zoomFactor*factor >= self.width():
 				self.zoomFactor *= factor
 				self.scale(factor, factor)
@@ -59,7 +60,7 @@ class mapView(QtGui.QGraphicsView):
 	def mouseMoveEvent(self, event):
 		QGraphicsView.mouseMoveEvent(self, event)
 		if self.joinExit == 1:
-			self.tempLine.setLine(roomList[self.source].x + diggerconf.roomCenter, roomList[self.source].y + diggerconf.roomCenter, self.mapToScene(event.x(), event.y()).x(), self.mapToScene(event.x(), event.y()).y())
+			self.tempLine.setLine(roomList[self.source].x + roomList[self.source].center, roomList[self.source].y + roomList[self.source].center, self.mapToScene(event.x(), event.y()).x(), self.mapToScene(event.x(), event.y()).y())
 		elif self.isPanning == True:
 			self.newPos = event.pos() - self.oldPos
 			self.oldPos = event.pos()
@@ -82,7 +83,7 @@ class mapView(QtGui.QGraphicsView):
 		if self.joinExit == 1:
 			check = 0
 			for iRoom in roomList:
-				if self.isWithin(scenePos.x(), iRoom.x, diggerconf.roomSize) and self.isWithin(scenePos.y(), iRoom.y, diggerconf.roomSize):
+				if self.isWithin(scenePos.x(), iRoom.x, iRoom.size) and self.isWithin(scenePos.y(), iRoom.y, iRoom.size):
 					check = 1
 					self.parent().openExitName(roomList[self.source].id, iRoom.id)
 					self.parent().ui.scene.removeItem(self.tempLine)
@@ -93,7 +94,7 @@ class mapView(QtGui.QGraphicsView):
 		else: # Pan scene across graphicsView
 			check = False
 			for iRoom in roomList: # Is the cursor over a room?
-				if self.isWithin(scenePos.x(), iRoom.x, diggerconf.roomSize) and self.isWithin(scenePos.y(), iRoom.y, diggerconf.roomSize): # Pan View
+				if self.isWithin(scenePos.x(), iRoom.x, iRoom.size) and self.isWithin(scenePos.y(), iRoom.y, iRoom.size): # Pan View
 					check = True
 					break
 			for iLabel in labelList: # Is the cursor over a label?
@@ -119,10 +120,10 @@ class mapView(QtGui.QGraphicsView):
 			return
 
 		for i in range(len(roomList)):
-			if self.isWithin(self.mapToScene(eventPos).x(), roomList[i].x, diggerconf.roomSize) and self.isWithin(self.mapToScene(eventPos).y(), roomList[i].y, diggerconf.roomSize):
+			if self.isWithin(self.mapToScene(eventPos).x(), roomList[i].x, roomList[i].size) and self.isWithin(self.mapToScene(eventPos).y(), roomList[i].y, roomList[i].size):
 				objectClicked = i
 				check = 1
-		if check == 0:
+		if check == 0: # If not, check if user right-clicked on a label
 			for i in xrange(len(labelList)):
 				if self.isWithin(self.mapToScene(eventPos).x(), labelList[i].x, labelList[i].box.boundingRect().width()) and self.isWithin(self.mapToScene(eventPos).y(), labelList[i].y, labelList[i].box.boundingRect().height()):
 					objectClicked = i

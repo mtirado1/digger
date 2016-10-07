@@ -88,6 +88,7 @@ class Main(QtGui.QMainWindow):
 			load_room_x = int(element.getAttribute("x"))
 			load_room_y = int(element.getAttribute("y"))
 			load_room_bcolor = element.getAttribute("bcolor")
+			load_room_center = int(element.getAttribute("size"))
 			load_room_name = getText(element.getElementsByTagName("name")[0])
 			load_room_desc = ""
 			load_room_code = []
@@ -100,6 +101,8 @@ class Main(QtGui.QMainWindow):
 			roomList[-1].x = load_room_x
 			roomList[-1].y = load_room_y
 			roomList[-1].bColor = load_room_bcolor
+			roomList[-1].center = load_room_center
+			roomList[-1].size = (load_room_center * 2) + 1
 			roomList[-1].code = load_room_code
 			self.ui.scene.addItem(roomList[-1].box)
 			roomList[-1].box.move_restrict_rect = QRectF(0, 0, load_map_width, load_map_height)
@@ -281,19 +284,19 @@ class Main(QtGui.QMainWindow):
 		roomString += "<br />Exits:<br />"
 		for k in exitList:
 			if k.source == room.id:
-				coord_a = room.x + diggerconf.roomCenter
-				coord_b = room.y + diggerconf.roomCenter
+				coord_a = room.x + room.center
+				coord_b = room.y + room.center
 				if k.dest == -1:
-					coord_c = coord_a + 2 * diggerconf.roomCenter
-					coord_d = coord_b + 2 * diggerconf.roomCenter
+					coord_c = coord_a + 2 * room.center
+					coord_d = coord_b + 2 * room.center
 				else:
 					coord_c = k.line.line().x2()
 					coord_d = k.line.line().y2()
 				k.line.setLine(coord_a, coord_b, coord_c, coord_d)
 				roomString += Qt.escape(k.name) + "<br />"
 			elif k.dest == room.id:
-				coord_c = room.x + diggerconf.roomCenter
-				coord_d = room.y + diggerconf.roomCenter
+				coord_c = room.x + room.center
+				coord_d = room.y + room.center
 				coord_a = k.line.line().x1()
 				coord_b = k.line.line().y1()
 				k.line.setLine(coord_a, coord_b, coord_c, coord_d)
@@ -301,23 +304,25 @@ class Main(QtGui.QMainWindow):
 			room.text.setHtml(roomString + "</p>")
 		else:
 			room.text.setHtml("")
-		room.text.setPos(QPointF(room.x + diggerconf.roomCenter + 2 - (room.text.boundingRect().width() / 2), room.y + diggerconf.roomSize + 5))
+		room.text.setPos(QPointF(room.x + room.center + 2 - (room.text.boundingRect().width() / 2), room.y + room.size + 5))
 		room.box.setBrush(QColor(room.bColor))
-		room.box.setRect(0, 0, diggerconf.roomSize, diggerconf.roomSize)
+		room.box.setRect(0, 0, room.size, room.size)
 		room.box.setZValue(1)
 
 
 	def drawExit(self, exit):
 		global exitList
+		roomSource = self.getPosOfRoom(exit.source)
+		roomDest   = self.getPosOfRoom(exit.dest)
 
-		coord_a = self.getPosOfRoom(exit.source).x + diggerconf.roomCenter
-		coord_b = self.getPosOfRoom(exit.source).y + diggerconf.roomCenter
+		coord_a = roomSource.x + roomSource.center
+		coord_b = roomSource.y + roomSource.center
 		if exit.dest == -1:
-			coord_c = coord_a + 2 * diggerconf.roomCenter
-			coord_d = coord_b + 2 * diggerconf.roomCenter
+			coord_c = coord_a + 2 * roomSource.center
+			coord_d = coord_b + 2 * roomSource.center
 		else:
-			coord_c = self.getPosOfRoom(exit.dest).x + diggerconf.roomCenter
-			coord_d = self.getPosOfRoom(exit.dest).y + diggerconf.roomCenter
+			coord_c = roomDest.x + roomDest.center
+			coord_d = roomDest.y + roomDest.center
 		exit.line.setLine(coord_a, coord_b, coord_c, coord_d)
 		exit.line.setZValue(0)
 
@@ -423,6 +428,8 @@ class Main(QtGui.QMainWindow):
 			roomList[index].desc=editDialog.te.toPlainText()
 			roomList[index].x=int(editDialog.le2.text())
 			roomList[index].y=int(editDialog.le3.text())
+			roomList[index].size = (2 * editDialog.sp.value()) + 1
+			roomList[index].center = editDialog.sp.value()
 			if editDialog.color.isValid():
 				roomList[index].bColor = editDialog.color.name()
 			codeList = editDialog.te2.toPlainText().split("\n")

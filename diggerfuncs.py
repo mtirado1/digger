@@ -67,7 +67,7 @@ def saveToFile(fname, parent):
 	global roomList
 	global exitList
 	for iRoom in roomList:
-		stream << ("\t<room id='%d' x='%d' y='%d' bcolor='%s'>\n" % (iRoom.id, iRoom.x, iRoom.y, iRoom.bColor))
+		stream << ("\t<room id='%d' x='%d' y='%d' bcolor='%s' size='%d'>\n" % (iRoom.id, iRoom.x, iRoom.y, iRoom.bColor, iRoom.center))
 		stream << "\t\t<name>" << Qt.escape(iRoom.name) << "</name>\n"
 		if iRoom.desc != "":
 			stream << "\t\t<description>" << mushEscape(Qt.escape(iRoom.desc)) << "</description>\n"
@@ -145,6 +145,8 @@ class Room:
 		self.bColor = ""
 		self.x = 0
 		self.y = 0
+		self.size = diggerconf.roomSize # Get room size from config file
+		self.center = diggerconf.roomCenter # Also room center
 		self.box = roomBox()
 		self.text = QGraphicsTextItem()
 		self.code = [] # List of lines of code to be executed in room
@@ -342,10 +344,16 @@ class editRoom(QDialog):
 		self.lbl3 = QLabel("Color")
 		self.btnColor = QPushButton("Select...")
 		self.btnColor.clicked.connect(self.openColorDialog)
+		
+		self.lbl4 = QLabel("Size")
+		self.sp = QSpinBox()
+		self.sp.setRange(5, 50)
+		
 		layout.addRow(self.lbl,self.le)
 		layout.addRow(self.lbl2)
 		layout.addRow(self.le2, self.le3)
 		layout.addRow(self.lbl3, self.btnColor)
+		layout.addRow(self.lbl4, self.sp)
 		self.tabName.setLayout(layout)
 
 		layout2 = QFormLayout() # Layout for description tab
@@ -377,6 +385,7 @@ class editRoom(QDialog):
 		self.te2.setPlainText(str("\n".join(roomList[room].code))) # Join lines of mushcode
 		self.le2.setText(str(int(roomList[room].x)))
 		self.le3.setText(str(int(roomList[room].y)))
+		self.sp.setValue((roomList[room].size-1)/2)
 
 class newExitName(QDialog):
 	def __init__(self, parent = None):
