@@ -453,7 +453,7 @@ class Main(QtGui.QMainWindow):
 			items = []
 			for x in xrange(editDialog.list1.count()):
 				items.append(editDialog.list1.item(x).text())
-			exitList[-1].alias = ";".join(items)
+			exitList[index].alias = ";".join(items)
 
 			# Draw ONLY the modified exit and the affected rooms
 			self.drawExit(exitList[index])

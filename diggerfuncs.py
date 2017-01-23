@@ -344,11 +344,11 @@ class editRoom(QDialog):
 		self.lbl3 = QLabel("Color")
 		self.btnColor = QPushButton("Select...")
 		self.btnColor.clicked.connect(self.openColorDialog)
-		
+
 		self.lbl4 = QLabel("Size")
 		self.sp = QSpinBox()
 		self.sp.setRange(5, 50)
-		
+
 		layout.addRow(self.lbl,self.le)
 		layout.addRow(self.lbl2)
 		layout.addRow(self.le2, self.le3)
@@ -376,7 +376,7 @@ class editRoom(QDialog):
 
 	def openColorDialog(self):
 		self.color = QColorDialog.getColor()
-		
+
 
 
 	def setData(self, room):
@@ -510,8 +510,9 @@ class editExit(QDialog):
 		else:
 			self.combo2.setCurrentIndex(self.combo2.findText("#" + str(exitList[exit].dest) + ": " + roomList[exitList[exit].dest].name))
 		self.te1.setPlainText(exitList[exit].desc)
-		for x in exitList[exit].alias.split(";"):
-			self.list1.addItem(x)
+		if len(exitList[exit].alias) > 0: # The exit does have an alias
+			for x in exitList[exit].alias.split(";"):
+				self.list1.addItem(x)
 
 class addLabel(QDialog):
 	def __init__(self, parent = None):
