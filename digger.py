@@ -481,7 +481,7 @@ class Main(QtGui.QMainWindow):
 		del labelList[id_]
 		self.updateStatusLabel()
 
-	def deleteLabelProperties(self, id_):
+	def editLabelProperties(self, id_):
 		editDialog = addLabel()
 		editDialog.setWindowTitle("Edit Label")
 		editDialog.le.setText(labelList[objectClicked].normalText)
