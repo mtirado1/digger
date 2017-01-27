@@ -61,8 +61,9 @@ class mapView(QtGui.QGraphicsView):
 
 	def mouseMoveEvent(self, event):
 		QGraphicsView.mouseMoveEvent(self, event)
-		self.posX = event.pos().x()
-		self.posY = event.pos().y()
+		scenePos = self.mapToScene(QPoint(event.x(), event.y()))
+		self.posX = scenePos.x()
+		self.posY = scenePos.y()
 		if self.joinExit == 1:
 			self.tempLine.setLine(roomList[self.source].x + roomList[self.source].center, roomList[self.source].y + roomList[self.source].center, self.mapToScene(event.x(), event.y()).x(), self.mapToScene(event.x(), event.y()).y())
 		elif self.isPanning == True:

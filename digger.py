@@ -201,16 +201,6 @@ class Main(QtGui.QMainWindow):
 			saveToFile(fname, self)
 			self.isNewFile = 0
 
-
-	def isRGB(self, number):
-		check = 1
-		for x in list(number[1:]):
-			if (ord(x) >= 48 and ord(x) <= 57) or ((ord(x) >= 65 and ord(x) <= 70) or (ord(x) >= 97 and ord(x) <= 102)):
-				check = check * 1
-			else:
-				check = 0
-		return check and (number[0] == '#')
-
 	def viewAbout(self):
 		global __version__
 		QMessageBox.about(self, "About Digger", """<b>Digger</b> v %s<p>Copyright &copy; 2016 Martin Tirado. All rights reserved. <p> This program can be used to design MUSH words through a graphical interface. <p> Python %s - Qt %s - PyQt %s on %s <p> Hosted on <a href='https://github.com/mtirado1/digger'> Github </a>""" % (__version__, platform.python_version(), QT_VERSION_STR, PYQT_VERSION_STR, platform.system()))
@@ -219,12 +209,9 @@ class Main(QtGui.QMainWindow):
 		optionsDialog = optionsClass(self)
 		optionsDialog.setData()
 		if optionsDialog.exec_():
-			colorString = str(optionsDialog.le3.text())
-			if self.isRGB(colorString):
-				self.bColor = colorString
-				self.ui.scene.setBackgroundBrush(QColor(colorString))
-			if self.isRGB(str(optionsDialog.le4.text())):
-				self.roomBColor = str(optionsDialog.le4.text())
+			self.bColor = optionsDialog.bColor.name()
+			self.ui.scene.setBackgroundBrush(optionsDialog.bColor)
+			self.roomBColor = optionsDialog.rColor.name()
 			self.ui.scene.setSceneRect(QRectF(0, 0, optionsDialog.sp.value(), optionsDialog.sp2.value()))
 			global roomList
 			global labelList
@@ -353,8 +340,9 @@ class Main(QtGui.QMainWindow):
 		roomDialog = newRoom(self)
 		if roomDialog.exec_():
 			global roomList
-			if roomDialog.le.text() != "":
-				roomList.append(Room(roomDialog.le.text(), findNewId(roomList), self))
+			if roomDialog.le.text() == "":
+				return
+			roomList.append(Room(roomDialog.le.text(), findNewId(roomList), self))
 			roomList[-1].x = x_
 			roomList[-1].y = y_
 			roomList[-1].bColor = self.roomBColor

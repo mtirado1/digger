@@ -282,24 +282,32 @@ class optionsClass(QDialog):
 		self.sp.setRange(200, 10000)
 		self.sp2 = QSpinBox()
 		self.sp2.setRange(200, 10000)
-		self.le3 = QLineEdit()
-		self.le4 = QLineEdit()
+		self.btnRColor = QPushButton("Select...")
+		self.btnBColor = QPushButton("Select...")
 		self.btn1 = QPushButton("Ok")
+		self.bColor = QColor()
+		self.rColor = QColor()
 		layout.addRow(self.lbl)
 		layout.addRow(self.lbl2, self.lbl3)
 		layout.addRow(self.sp, self.sp2)
-		layout.addRow(self.lbl4)
-		layout.addRow(self.le3)
-		layout.addRow(self.lbl5)
-		layout.addRow(self.le4)
+		layout.addRow(self.lbl4, self.btnBColor)
+		layout.addRow(self.lbl5, self.btnRColor)
 		layout.addRow(self.btn1)
 		self.setLayout(layout)
-		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
+		self.btn1.clicked.connect(self.accept)
+		self.btnRColor.clicked.connect(self.selectRoomColor)
+		self.btnBColor.clicked.connect(self.selectBackgroundColor)
+
+	def selectRoomColor(self):
+		self.rColor = QColorDialog.getColor()
+	def selectBackgroundColor(self):
+		self.bColor = QColorDialog.getColor()
+
 	def setData(self):
 		self.sp.setValue(int(self.parent().ui.scene.width()))
 		self.sp2.setValue(int(self.parent().ui.scene.height()))
-		self.le3.setText(str(self.parent().bColor))
-		self.le4.setText(str(self.parent().roomBColor))
+		self.rColor = QColor(self.parent().roomBColor)
+		self.bColor = QColor(self.parent().bColor)
 
 
 class newRoom(QDialog):
