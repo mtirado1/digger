@@ -24,9 +24,11 @@ class mapView(QtGui.QGraphicsView):
 		self.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
 		self.joinExit = 0
 		self.source = -1
-
+		self.selectedRoom = -1
 		self.oldPos = 0
 		self.newPos = 0
+		self.posX = 0
+		self.posY = 0
 		self.isPanning = False
 		self.tempLine = QGraphicsLineItem()
 		self.setMouseTracking(True)
@@ -59,6 +61,8 @@ class mapView(QtGui.QGraphicsView):
 
 	def mouseMoveEvent(self, event):
 		QGraphicsView.mouseMoveEvent(self, event)
+		self.posX = event.pos().x()
+		self.posY = event.pos().y()
 		if self.joinExit == 1:
 			self.tempLine.setLine(roomList[self.source].x + roomList[self.source].center, roomList[self.source].y + roomList[self.source].center, self.mapToScene(event.x(), event.y()).x(), self.mapToScene(event.x(), event.y()).y())
 		elif self.isPanning == True:
@@ -95,6 +99,7 @@ class mapView(QtGui.QGraphicsView):
 			check = False
 			for iRoom in roomList: # Is the cursor over a room?
 				if self.isWithin(scenePos.x(), iRoom.x, iRoom.size) and self.isWithin(scenePos.y(), iRoom.y, iRoom.size): # Pan View
+					self.selectedRoom = iRoom.id
 					check = True
 					break
 			for iLabel in labelList: # Is the cursor over a label?
@@ -102,6 +107,7 @@ class mapView(QtGui.QGraphicsView):
 					check = True
 					break
 			if event.button() == Qt.LeftButton and not check:
+				self.selectedRoom = -1
 				self.isPanning = True # Start panning
 				self.oldPos = event.pos()
 
@@ -137,6 +143,9 @@ class mapView(QtGui.QGraphicsView):
 			actionAddExit = menu.addAction("Add Exit")
 			exitMenu = menu.addMenu("Exits")
 			actionDeleteRoom = menu.addAction("Delete Room")
+			menu.addSeparator()
+			actionCopy = menu.addAction("Copy")
+			actionCopy.setShortcut(QtGui.QKeySequence("Ctrl+C"))
 			actionExitList = []
 			actionExitId = []
 			menuEnabled = False
@@ -155,6 +164,8 @@ class mapView(QtGui.QGraphicsView):
 				self.parent().ui.scene.addItem(self.tempLine)
 			elif action == actionDeleteRoom: # Delete a room
 				self.parent().deleteRoom(objectClicked)
+			elif action == actionCopy: # Copy this Room
+				self.parent().copyRoom(roomList[objectClicked].id)
 			else:
 				for k in xrange(len(actionExitList)):
 					if action == actionExitList[k]:
@@ -176,6 +187,9 @@ class mapView(QtGui.QGraphicsView):
 			actionNewRoom = menu.addAction("New Room")
 			actionNewExit = menu.addAction("New Exit")
 			actionAddLabel = menu.addAction("Add Label")
+			menu.addSeparator()
+			actionPaste = menu.addAction("Paste")
+			actionPaste.setShortcut(QtGui.QKeySequence("Ctrl+V"))
 			action = menu.exec_(event.globalPos())
 			if action == actionNewRoom:
 				self.parent().digRoom(scenePos.x(), scenePos.y())
@@ -183,6 +197,8 @@ class mapView(QtGui.QGraphicsView):
 				self.parent().openExit()
 			elif action == actionAddLabel:
 				self.parent().addLabel(scenePos.x(), scenePos.y())
+			elif action == actionPaste:
+				self.parent().pasteRoom(scenePos.x(), scenePos.y())
 
 class Ui_MainWindow(object):
 	def setupUi(self, MainWindow):

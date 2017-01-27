@@ -47,6 +47,17 @@ class Main(QtGui.QMainWindow):
 		self.ui.actionNewExit.triggered.connect(self.openExit)
 		self.ui.actionNewLabel.triggered.connect(lambda: self.addLabel(self.ui.scene.width()/2, self.ui.scene.height()/2))
 
+		self.actionKeyCopy = QtGui.QAction(self)
+		self.actionKeyCopy.setShortcut("Ctrl+C")
+		self.addAction(self.actionKeyCopy)
+		self.actionKeyPaste = QtGui.QAction(self)
+		self.actionKeyPaste.setShortcut("Ctrl+V")
+		self.addAction(self.actionKeyPaste)
+
+
+		self.actionKeyPaste.triggered.connect(lambda: self.pasteRoom(self.ui.graphicsView.posX, self.ui.graphicsView.posY))
+		self.actionKeyCopy.triggered.connect(lambda: self.copyRoom(self.ui.graphicsView.selectedRoom))
+
 		self.statusRoom = QLabel("")
 		self.ui.statusbar.addWidget(self.statusRoom)
 		self.statusExit = QLabel("")
@@ -59,6 +70,9 @@ class Main(QtGui.QMainWindow):
 		self.ui.scene.setBackgroundBrush(QColor(self.bColor))
 		self.roomBColor = diggerconf.roomColor
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
+
+
+		self.copyID = -1 # No room selected
 
 	def toggleText(self):
 		for room in roomList:
@@ -226,7 +240,7 @@ class Main(QtGui.QMainWindow):
 
 	def newFile(self): # New Map
 		self.fileName = "Untitled"
-		self.bColor = "#FFFFFF"
+		self.bColor = diggerconf.bColor
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 		self.ui.scene.setBackgroundBrush(QColor(self.bColor))
 		self.isNewFile = 1
@@ -352,6 +366,30 @@ class Main(QtGui.QMainWindow):
 			self.drawRoom(roomList[-1])
 			self.updateStatusRoom()
 
+	def copyRoom(self, id_):
+		self.copyID = id_
+
+	def pasteRoom(self, x_, y_): # same as digRoom, but with the properties of another room
+		if self.copyID == -1:
+			return
+		room = self.getPosOfRoom(self.copyID)
+		global roomList
+		roomList.append(Room(room.name, findNewId(roomList), self)) # Assign same name, but new id
+
+		roomList[-1].desc = room.desc
+		roomList[-1].size = room.size
+		roomList[-1].center = room.center
+		roomList[-1].x = x_
+		roomList[-1].y = y_
+		roomList[-1].bColor = room.bColor
+		roomList[-1].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
+		roomList[-1].code = list(room.code)
+		self.ui.scene.addItem(roomList[-1].box)
+		self.ui.scene.addItem(roomList[-1].text)
+		self.drawRoom(roomList[-1])
+		self.updateStatusRoom()
+
+
 	def deleteRoom(self, index):
 		global exitList
 		global roomList
@@ -379,6 +417,9 @@ class Main(QtGui.QMainWindow):
 		self.updateStatusExit()
 
 	def openExit(self):
+		global roomList
+		if len(roomList) == 0:
+			return
 		exitDialog = editExit(self)
 		exitDialog.setWindowTitle("New Exit")
 		exitDialog.setData()
@@ -482,6 +523,7 @@ class Main(QtGui.QMainWindow):
 		self.updateStatusLabel()
 
 	def editLabelProperties(self, id_):
+		objectClicked = id_
 		editDialog = addLabel()
 		editDialog.setWindowTitle("Edit Label")
 		editDialog.le.setText(labelList[objectClicked].normalText)
