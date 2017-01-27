@@ -64,8 +64,6 @@ def saveToFile(fname, parent):
 	stream.setCodec("UTF-8")
 	stream << ("<?xml version='1.0' encoding='UTF-8'?>\n" + "<!DOCTYPE DIGGER>\n" + "<DIGGER VERSION='%s'>\n" % (__version__))
 	stream << ("<map width='%d' height='%d' bcolor='%s'>\n" % (parent.ui.scene.width(), parent.ui.scene.height(), parent.bColor))
-	global roomList
-	global exitList
 	for iRoom in roomList:
 		stream << ("\t<room id='%d' x='%d' y='%d' bcolor='%s' size='%d'>\n" % (iRoom.id, iRoom.x, iRoom.y, iRoom.bColor, iRoom.center))
 		stream << "\t\t<name>" << Qt.escape(iRoom.name) << "</name>\n"
@@ -104,7 +102,6 @@ class labelBox(QGraphicsRectItem):
 		self.moved = 0
 
 	def mouseMoveEvent(self, event):
-		global roomList
 		self.moved = 1
 		labelList[self.index].x = self.scenePos().x()
 		labelList[self.index].y = self.scenePos().y()
@@ -129,7 +126,6 @@ class roomBox(QGraphicsRectItem):
 		self.moved = 0
 
 	def mouseMoveEvent(self, event):
-		global roomList
 		self.moved = 1
 		roomList[self.index].x = self.scenePos().x()
 		roomList[self.index].y = self.scenePos().y()
@@ -503,7 +499,6 @@ class editExit(QDialog):
 			self.te1.setFontFamily("Monospace")
 
 	def setData(self):
-		global exitList
 		self.combo2.addItem("#-1: No destination")
 		self.rDict["#-1: No destination"] = -1
 		for i in roomList:

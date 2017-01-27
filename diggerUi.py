@@ -78,10 +78,6 @@ class mapView(QtGui.QGraphicsView):
 			self.isPanning = False
 
 	def mousePressEvent(self, event):
-		global roomList
-		global exitList
-		global id_exit
-		global labelList
 		eventPos = QPoint(event.x(), event.y())
 		scenePos = self.mapToScene(eventPos)
 		QGraphicsView.mousePressEvent(self, event)
@@ -114,10 +110,6 @@ class mapView(QtGui.QGraphicsView):
 
 	def contextMenuEvent(self, event):
 		#Check if the user clicked on a room
-		global roomList
-		global labelList
-		global exitList
-		global id_exit
 		eventPos = QPoint(event.x(), event.y())
 		scenePos = self.mapToScene(eventPos)
 		check = 0
@@ -137,7 +129,6 @@ class mapView(QtGui.QGraphicsView):
 					check = 2
 		#User clicked on a room
 		if check == 1:
-			global exitList
 			menu = QMenu()
 			actionViewDetails = menu.addAction("#" + str(roomList[objectClicked].id) + ": " + roomList[objectClicked].name)
 			actionEditRoom = menu.addAction("Edit Properties")

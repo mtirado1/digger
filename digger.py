@@ -79,9 +79,6 @@ class Main(QtGui.QMainWindow):
 			self.drawRoom(room)
 
 	def readMapNode(self, element):
-		global roomList
-		global exitList
-		global labelList
 		load_map_width = 0
 		load_map_height = 0
 		def getText(element):
@@ -123,7 +120,6 @@ class Main(QtGui.QMainWindow):
 			self.ui.scene.addItem(roomList[-1].text)
 
 		def readExitNode(element):
-			global exitList
 			load_exit_id = int(element.getAttribute("id"))
 			load_exit_source = int(element.getAttribute("source"))
 			load_exit_dest = int(element.getAttribute("destination"))
@@ -158,9 +154,6 @@ class Main(QtGui.QMainWindow):
 		self.ui.scene.setSceneRect(0, 0, load_map_width, load_map_height)
 
 	def populateFromDOM(self, fname):
-		global roomList
-		global exitList
-		global labelList
 		del roomList[:]
 		del exitList[:]
 		del labelList[:]
@@ -213,8 +206,6 @@ class Main(QtGui.QMainWindow):
 			self.ui.scene.setBackgroundBrush(optionsDialog.bColor)
 			self.roomBColor = optionsDialog.rColor.name()
 			self.ui.scene.setSceneRect(QRectF(0, 0, optionsDialog.sp.value(), optionsDialog.sp2.value()))
-			global roomList
-			global labelList
 			for x in roomList:
 				x.box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
 			for x in labelList:
@@ -227,13 +218,10 @@ class Main(QtGui.QMainWindow):
 
 	def newFile(self): # New Map
 		self.fileName = "Untitled"
-		self.bColor = diggerconf.bColor
+		self.bColor = diggerconf.mapColor
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 		self.ui.scene.setBackgroundBrush(QColor(self.bColor))
 		self.isNewFile = 1
-		global roomList
-		global exitList
-		global labelList
 		del roomList[:]
 		del exitList[:]
 		del labelList[:]
@@ -277,7 +265,6 @@ class Main(QtGui.QMainWindow):
 	def drawRoom(self, room):
 		if not room:
 			return
-		global roomList
 		room.box.setPos(room.x, room.y)
 		room.box.index=roomList.index(room)
 
@@ -312,7 +299,6 @@ class Main(QtGui.QMainWindow):
 
 
 	def drawExit(self, exit):
-		global exitList
 		roomSource = self.getPosOfRoom(exit.source)
 		roomDest   = self.getPosOfRoom(exit.dest)
 
@@ -328,7 +314,6 @@ class Main(QtGui.QMainWindow):
 		exit.line.setZValue(0)
 
 	def drawLabel(self, label):
-		global labelList
 		label.box.index = labelList.index(label)
 		label.text.setZValue(10)
 		label.box.setZValue(9)
@@ -336,10 +321,8 @@ class Main(QtGui.QMainWindow):
 		label.box.setPos(label.x, label.y)
 
 	def digRoom(self, x_, y_):
-		global roomList
 		roomDialog = newRoom(self)
 		if roomDialog.exec_():
-			global roomList
 			if roomDialog.le.text() == "":
 				return
 			roomList.append(Room(roomDialog.le.text(), findNewId(roomList), self))
@@ -361,7 +344,6 @@ class Main(QtGui.QMainWindow):
 		if self.copyID == -1:
 			return
 		room = self.getPosOfRoom(self.copyID)
-		global roomList
 		roomList.append(Room(room.name, findNewId(roomList), self)) # Assign same name, but new id
 
 		roomList[-1].desc = room.desc
@@ -379,8 +361,6 @@ class Main(QtGui.QMainWindow):
 
 
 	def deleteRoom(self, index):
-		global exitList
-		global roomList
 		self.ui.scene.removeItem(roomList[index].box)
 		self.ui.scene.removeItem(roomList[index].text)
 		deleted = True
@@ -405,14 +385,12 @@ class Main(QtGui.QMainWindow):
 		self.updateStatusExit()
 
 	def openExit(self):
-		global roomList
 		if len(roomList) == 0:
 			return
 		exitDialog = editExit(self)
 		exitDialog.setWindowTitle("New Exit")
 		exitDialog.setData()
 		if exitDialog.exec_():
-			global exitList
 
 			exitList.append(Exit(exitDialog.le.text(), findNewId(exitList), exitDialog.rDict[str(exitDialog.combo1.currentText())]))
 			exitList[-1].dest = exitDialog.rDict[str(exitDialog.combo2.currentText())]
@@ -431,8 +409,6 @@ class Main(QtGui.QMainWindow):
 			self.updateStatusExit()
 
 	def openExitName(self, source, destination):
-		global roomList
-		global exitList
 		exitDialog = newExitName()
 		if exitDialog.exec_():
 			exitList.append(Exit(exitDialog.le.text(), findNewId(exitList), source))
@@ -452,7 +428,6 @@ class Main(QtGui.QMainWindow):
 		editDialog = editRoom()
 		editDialog.setData(index)
 		if editDialog.exec_():
-			global roomList
 			roomList[index].name=editDialog.le.text()
 			roomList[index].desc=editDialog.te.toPlainText()
 			roomList[index].x=int(editDialog.le2.text())
@@ -474,7 +449,6 @@ class Main(QtGui.QMainWindow):
 		editDialog.setData()
 		editDialog.fillData(index)
 		if editDialog.exec_():
-			global exitList
 			exitList[index].name = editDialog.le.text()
 			exitList[index].source = editDialog.rDict[str(editDialog.combo1.currentText())]
 			exitList[index].dest = editDialog.rDict[str(editDialog.combo2.currentText())]
@@ -492,7 +466,6 @@ class Main(QtGui.QMainWindow):
 	def addLabel(self, x_, y_):
 		labelDialog = addLabel()
 		if labelDialog.exec_():
-			global labelList
 			newIndex = len(labelList)
 			labelList.append(Label(labelDialog.le.text(), x_, y_))
 			labelList[-1].box.index = newIndex
@@ -504,7 +477,6 @@ class Main(QtGui.QMainWindow):
 			self.updateStatusLabel()
 
 	def deleteLabel(self, id_):
-		global labelList
 		self.ui.scene.removeItem(labelList[id_].text)
 		self.ui.scene.removeItem(labelList[id_].box)
 		del labelList[id_]
