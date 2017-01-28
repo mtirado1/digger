@@ -4,7 +4,7 @@ import diggerconf
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-__version__ = "1.2.1"
+__version__ = "1.3.0"
 
 #######################################
 # Global Lists

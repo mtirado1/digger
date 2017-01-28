@@ -424,6 +424,25 @@ class Main(QtGui.QMainWindow):
 		self.drawRoom(self.getPosOfRoom(destination))
 		self.updateStatusExit()
 
+	def openExitChain(self):
+		exitDialog = newExitName()
+		if exitDialog.exec_():
+			for x in range(len(self.ui.graphicsView.chainRoom) - 1): # Skip the last room
+				source = roomList[self.ui.graphicsView.chainRoom[x]].id
+				destination = roomList[self.ui.graphicsView.chainRoom[x+1]].id
+				exitList.append(Exit(exitDialog.le.text(), findNewId(exitList), source))
+				exitList[-1].dest = destination
+				self.drawExit(exitList[-1])
+				self.ui.scene.addItem(exitList[-1].line)
+				if exitDialog.checkBox.isChecked():
+					exitList.append(Exit(exitDialog.le2.text(), findNewId(exitList), destination))
+					exitList[-1].dest = source
+					self.drawExit(exitList[-1])
+					self.ui.scene.addItem(exitList[-1].line)
+				self.drawRoom(roomList[self.ui.graphicsView.chainRoom[x]])
+				self.drawRoom(roomList[self.ui.graphicsView.chainRoom[x+1]])
+			self.updateStatusExit()
+
 	def editRoomProperties(self, index):
 		editDialog = editRoom()
 		editDialog.setData(index)

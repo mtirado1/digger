@@ -31,6 +31,11 @@ class mapView(QtGui.QGraphicsView):
 		self.posY = 0
 		self.isPanning = False
 		self.tempLine = QGraphicsLineItem()
+
+		# Exit chaining
+		self.chainRoom = []
+		self.chainLine = []
+
 		self.setMouseTracking(True)
 		self.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
 		self.setResizeAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
@@ -65,7 +70,11 @@ class mapView(QtGui.QGraphicsView):
 		self.posX = scenePos.x()
 		self.posY = scenePos.y()
 		if self.joinExit == 1:
-			self.tempLine.setLine(roomList[self.source].x + roomList[self.source].center, roomList[self.source].y + roomList[self.source].center, self.mapToScene(event.x(), event.y()).x(), self.mapToScene(event.x(), event.y()).y())
+			self.tempLine.setLine(roomList[self.source].x + roomList[self.source].center, roomList[self.source].y + roomList[self.source].center, scenePos.x(), scenePos.y())
+		elif self.joinExit == 2: # Chain exit
+			val_x = roomList[self.chainRoom[-1]].x + roomList[self.chainRoom[-1]].center
+			val_y = roomList[self.chainRoom[-1]].y + roomList[self.chainRoom[-1]].center
+			self.tempLine.setLine(val_x, val_y, scenePos.x(), scenePos.y())
 		elif self.isPanning == True:
 			self.newPos = event.pos() - self.oldPos
 			self.oldPos = event.pos()
@@ -92,6 +101,30 @@ class mapView(QtGui.QGraphicsView):
 			if check == 0:
 				self.parent().ui.scene.removeItem(self.tempLine)
 			self.joinExit = 0
+		elif self.joinExit == 2: # Chain exit
+			check = 0
+			for x in xrange(len(roomList)):
+				if self.isWithin(scenePos.x(), roomList[x].x, roomList[x].size) and self.isWithin(scenePos.y(), roomList[x].y, roomList[x].size):
+					check = 1
+					self.chainRoom.append(x)
+					self.chainLine.append(QGraphicsLineItem())
+					self.parent().ui.scene.addItem(self.chainLine[-1])
+					val_x = roomList[self.chainRoom[-2]].x + roomList[self.chainRoom[-2]].center
+					val_y = roomList[self.chainRoom[-2]].y + roomList[self.chainRoom[-2]].center
+					last_x = roomList[self.chainRoom[-1]].x + roomList[self.chainRoom[-1]].center
+					last_y = roomList[self.chainRoom[-1]].y + roomList[self.chainRoom[-1]].center
+					self.tempLine.setLine(last_x, last_y, scenePos.x(), scenePos.y())
+					self.chainLine[-1].setLine(val_x, val_y, last_x, last_y)
+					break
+			if check == 0:
+				self.parent().ui.scene.removeItem(self.tempLine)
+				self.parent().openExitChain()
+				del self.chainRoom[:]
+				for x in self.chainLine:
+					self.parent().ui.scene.removeItem(x)
+				del self.chainLine[:]
+				self.joinExit = 0
+
 		else: # Pan scene across graphicsView
 			check = False
 			for iRoom in roomList: # Is the cursor over a room?
@@ -133,6 +166,7 @@ class mapView(QtGui.QGraphicsView):
 			actionViewDetails = menu.addAction("#" + str(roomList[objectClicked].id) + ": " + roomList[objectClicked].name)
 			actionEditRoom = menu.addAction("Edit Properties")
 			actionAddExit = menu.addAction("Add Exit")
+			actionAddExitChain = menu.addAction("Add Exit Chain")
 			exitMenu = menu.addMenu("Exits")
 			actionDeleteRoom = menu.addAction("Delete Room")
 			menu.addSeparator()
@@ -154,6 +188,13 @@ class mapView(QtGui.QGraphicsView):
 				self.joinExit = 1
 				self.source = objectClicked
 				self.parent().ui.scene.addItem(self.tempLine)
+			elif action == actionAddExitChain:
+				self.joinExit = 2 # Chain exits
+				del self.chainLine[:]
+				del self.chainRoom[:]
+				self.chainRoom.append(objectClicked)
+				self.parent().ui.scene.addItem(self.tempLine)
+
 			elif action == actionDeleteRoom: # Delete a room
 				self.parent().deleteRoom(objectClicked)
 			elif action == actionCopy: # Copy this Room
