@@ -214,7 +214,7 @@ class Main(QtGui.QMainWindow):
 
 	def exportDump(self):
 		exportWindow = exportClass(self)
-		exportWindow.exportAll()
+		exportWindow.exportAll(self.fileName)
 		exportWindow.show()
 
 	def newFile(self): # New Map
