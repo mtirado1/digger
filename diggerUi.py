@@ -92,10 +92,10 @@ class mapView(QtGui.QGraphicsView):
 		QGraphicsView.mousePressEvent(self, event)
 		if self.joinExit == 1:
 			check = 0
-			for iRoom in roomList:
-				if self.isWithin(scenePos.x(), iRoom.x, iRoom.size) and self.isWithin(scenePos.y(), iRoom.y, iRoom.size):
+			for i, room in roomList.iteritems():
+				if self.isWithin(scenePos.x(), room.x, room.size) and self.isWithin(scenePos.y(), room.y, room.size):
 					check = 1
-					self.parent().openExitName(roomList[self.source].id, iRoom.id)
+					self.parent().openExitName(self.source, i)
 					self.parent().ui.scene.removeItem(self.tempLine)
 					break
 			if check == 0:
@@ -103,10 +103,10 @@ class mapView(QtGui.QGraphicsView):
 			self.joinExit = 0
 		elif self.joinExit == 2: # Chain exit
 			check = 0
-			for x in xrange(len(roomList)):
-				if self.isWithin(scenePos.x(), roomList[x].x, roomList[x].size) and self.isWithin(scenePos.y(), roomList[x].y, roomList[x].size):
+			for i, room in roomList.iteritems():
+				if self.isWithin(scenePos.x(), room.x, room.size) and self.isWithin(scenePos.y(), room.y, room.size):
 					check = 1
-					self.chainRoom.append(x)
+					self.chainRoom.append(i)
 					self.chainLine.append(QGraphicsLineItem())
 					self.parent().ui.scene.addItem(self.chainLine[-1])
 					val_x = roomList[self.chainRoom[-2]].x + roomList[self.chainRoom[-2]].center
@@ -127,13 +127,13 @@ class mapView(QtGui.QGraphicsView):
 
 		else: # Pan scene across graphicsView
 			check = False
-			for iRoom in roomList: # Is the cursor over a room?
-				if self.isWithin(scenePos.x(), iRoom.x, iRoom.size) and self.isWithin(scenePos.y(), iRoom.y, iRoom.size): # Pan View
-					self.selectedRoom = iRoom.id
+			for i, room in roomList.iteritems(): # Is the cursor over a room?
+				if self.isWithin(scenePos.x(), room.x, room.size) and self.isWithin(scenePos.y(), room.y, room.size): # Pan View
+					self.selectedRoom = i
 					check = True
 					break
-			for iLabel in labelList: # Is the cursor over a label?
-				if self.isWithin(scenePos.x(), iLabel.x, iLabel.box.boundingRect().width()) and self.isWithin(scenePos.y(), iLabel.y, iLabel.box.boundingRect().height()):
+			for i, label in labelList.iteritems(): # Is the cursor over a label?
+				if self.isWithin(scenePos.x(), label.x, label.box.boundingRect().width()) and self.isWithin(scenePos.y(), label.y, label.box.boundingRect().height()):
 					check = True
 					break
 			if event.button() == Qt.LeftButton and not check:
@@ -151,19 +151,19 @@ class mapView(QtGui.QGraphicsView):
 		if scenePos.x() > self.parent().ui.scene.width() or scenePos.y() > self.parent().ui.scene.height(): # Cursor outside of scene
 			return
 
-		for i in range(len(roomList)):
+		for i in roomList:
 			if self.isWithin(self.mapToScene(eventPos).x(), roomList[i].x, roomList[i].size) and self.isWithin(self.mapToScene(eventPos).y(), roomList[i].y, roomList[i].size):
 				objectClicked = i
 				check = 1
 		if check == 0: # If not, check if user right-clicked on a label
-			for i in xrange(len(labelList)):
+			for i in labelList:
 				if self.isWithin(self.mapToScene(eventPos).x(), labelList[i].x, labelList[i].box.boundingRect().width()) and self.isWithin(self.mapToScene(eventPos).y(), labelList[i].y, labelList[i].box.boundingRect().height()):
 					objectClicked = i
 					check = 2
 		#User clicked on a room
 		if check == 1:
 			menu = QMenu()
-			actionViewDetails = menu.addAction("#" + str(roomList[objectClicked].id) + ": " + roomList[objectClicked].name)
+			actionViewDetails = menu.addAction("#" + str(objectClicked) + ": " + roomList[objectClicked].name)
 			actionEditRoom = menu.addAction("Edit Properties")
 			actionAddExit = menu.addAction("Add Exit")
 			actionAddExitChain = menu.addAction("Add Exit Chain")
@@ -175,8 +175,8 @@ class mapView(QtGui.QGraphicsView):
 			actionExitList = []
 			actionExitId = []
 			menuEnabled = False
-			for f in xrange(len(exitList)):
-				if exitList[f].source == roomList[objectClicked].id:
+			for f in exitList:
+				if exitList[f].source == objectClicked:
 					menuEnabled = True
 					actionExitId.append(f)
 					actionExitList.append(exitMenu.addAction(exitList[f].name))
@@ -198,7 +198,7 @@ class mapView(QtGui.QGraphicsView):
 			elif action == actionDeleteRoom: # Delete a room
 				self.parent().deleteRoom(objectClicked)
 			elif action == actionCopy: # Copy this Room
-				self.parent().copyRoom(roomList[objectClicked].id)
+				self.parent().copyRoom(objectClicked)
 			else:
 				for k in xrange(len(actionExitList)):
 					if action == actionExitList[k]:

@@ -4,29 +4,29 @@ import diggerconf
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 
 #######################################
-# Global Lists
-roomList = []
-exitList = []
-labelList = []
+# Global Dictionaries
+roomList = {}
+exitList = {}
+labelList = {}
 
 def mushUnEscape(str):
 	retStr = ""
 	x = 0
 	while x != len(str):
 		if str[x] == "%":
-			x = x + 1
+			x += 1
 			if str[x] == "%":
-				retStr = retStr + "%"
+				retStr += "%"
 			elif str[x] == "r":
-				retStr = retStr + "\n"
+				retStr += "\n"
 			else:
-				retStr = retStr + str[x]
+				retStr += str[x]
 		else:
-			retStr = retStr + str[x]
-		x = x + 1
+			retStr += str[x]
+		x += 1
 	return retStr
 
 def mushEscape(str):
@@ -34,25 +34,25 @@ def mushEscape(str):
 	x = 0
 	while x != len(str):
 		if str[x] == "%":
-			retStr = retStr + "%%"
+			retStr += "%%"
 		elif str[x] == "\n":
-			retStr = retStr + "%r"
+			retStr += "%r"
 		else:
-			retStr = retStr + str[x]
-		x = x + 1
+			retStr += str[x]
+		x += 1
 	return retStr
 
-def findNewId(lst):
+def findNewId(dict):
 	returnId = 0
 	check = 1
 	while check:
-		for x in lst:
-			if x.id == returnId:
+		for x in dict:
+			if x == returnId:
 				returnId = returnId + 1
 				check = 1
 			else:
 				check = 0
-		if not lst:
+		if not dict:
 			check = 0
 	return returnId
 
@@ -64,26 +64,26 @@ def saveToFile(fname, parent):
 	stream.setCodec("UTF-8")
 	stream << ("<?xml version='1.0' encoding='UTF-8'?>\n" + "<!DOCTYPE DIGGER>\n" + "<DIGGER VERSION='%s'>\n" % (__version__))
 	stream << ("<map width='%d' height='%d' bcolor='%s'>\n" % (parent.ui.scene.width(), parent.ui.scene.height(), parent.bColor))
-	for iRoom in roomList:
-		stream << ("\t<room id='%d' x='%d' y='%d' bcolor='%s' size='%d'>\n" % (iRoom.id, iRoom.x, iRoom.y, iRoom.bColor, iRoom.center))
-		stream << "\t\t<name>" << Qt.escape(iRoom.name) << "</name>\n"
-		if iRoom.desc != "":
-			stream << "\t\t<description>" << mushEscape(Qt.escape(iRoom.desc)) << "</description>\n"
-		if iRoom.code:
-			for codeLine in iRoom.code:
+	for i, room in roomList.iteritems():
+		stream << ("\t<room id='%d' x='%d' y='%d' bcolor='%s' size='%d'>\n" % (i, room.x, room.y, room.bColor, room.center))
+		stream << "\t\t<name>" << Qt.escape(room.name) << "</name>\n"
+		if room.desc != "":
+			stream << "\t\t<description>" << mushEscape(Qt.escape(room.desc)) << "</description>\n"
+		if room.code:
+			for codeLine in room.code:
 				stream << "\t\t<code>" << Qt.escape(codeLine) << "</code>\n"
 		stream << "\t</room>\n"
-	for iExit in exitList:
-		stream << ("\t<exit id='%d' source='%d' destination='%d'>\n" % (iExit.id, iExit.source, iExit.dest))
-		stream << "\t\t<name>" << Qt.escape(iExit.name) << "</name>\n"
-		if iExit.desc != "":
-			stream <<"\t\t<description>" << mushEscape(Qt.escape(iExit.desc)) << "</description>\n"
-		if iExit.alias != "":
-			stream << "\t\t<alias>" << Qt.escape(iExit.alias) << "</alias>\n"
+	for i, exit in exitList.iteritems():
+		stream << ("\t<exit id='%d' source='%d' destination='%d'>\n" % (i, exit.source, exit.dest))
+		stream << "\t\t<name>" << Qt.escape(exit.name) << "</name>\n"
+		if exit.desc != "":
+			stream <<"\t\t<description>" << mushEscape(Qt.escape(exit.desc)) << "</description>\n"
+		if exit.alias != "":
+			stream << "\t\t<alias>" << Qt.escape(exit.alias) << "</alias>\n"
 		stream << "\t</exit>\n"
-	for x in xrange(len(labelList)):
-		stream << ("\t<label x='%d' y='%d'>" % (labelList[x].x, labelList[x].y))
-		stream << Qt.escape(labelList[x].normalText)
+	for i, label in labelList:
+		stream << ("\t<label x='%d' y='%d'>" % (label.x, label.y))
+		stream << Qt.escape(label.normalText)
 		stream << "</label>\n"
 	stream << "</map>\n</DIGGER>"
 
@@ -122,7 +122,7 @@ class roomBox(QGraphicsRectItem):
 	def mouseReleaseEvent(self, event):
 		if self.moved == 1:
 			QGraphicsRectItem.mouseReleaseEvent(self, event)
-			self.scene().parent().parent().drawRoom(roomList[self.index])
+			self.scene().parent().parent().drawRoom(self.index)
 		self.moved = 0
 
 	def mouseMoveEvent(self, event):
@@ -134,8 +134,7 @@ class roomBox(QGraphicsRectItem):
 			QGraphicsRectItem.mouseMoveEvent(self, event)
 
 class Room:
-	def __init__(self, name, id_, parent):
-		self.id = id_
+	def __init__(self, name, id, parent):
 		self.name = name
 		self.desc = ""
 		self.bColor = ""
@@ -144,14 +143,13 @@ class Room:
 		self.size = diggerconf.roomSize # Get room size from config file
 		self.center = diggerconf.roomCenter # Also room center
 		self.box = roomBox()
+		self.box.index = id
 		self.text = QGraphicsTextItem()
 		self.code = [] # List of lines of code to be executed in room
 
 class Exit:
 	type='exit'
-	def __init__(self, name, id_, source):
-
-		self.id = id_
+	def __init__(self, name, source):
 		self.name = name
 		self.alias = ""
 		self.desc = ""
@@ -167,7 +165,7 @@ class Exit:
 
 class Label:
 	type='label'
-	def __init__(self, text, x_, y_):
+	def __init__(self, text, id, x_, y_):
 		self.box = labelBox()
 		self.x = x_
 		self.y = y_
@@ -175,6 +173,7 @@ class Label:
 		self.text = QGraphicsTextItem()
 		self.text.setHtml("<p>" + self.normalText + "</p>")
 		self.text.setPos(x_ - (self.text.boundingRect().width() / 2), y_ - (self.text.boundingRect().height() / 2))
+		self.box.index = id
 		self.box.setPos(x_ - (self.text.boundingRect().width() / 2), y_ - (self.text.boundingRect().height() / 2))
 		self.box.setBrush(QColor("#FFF7A9"))
 		self.box.setRect(0, 0, self.text.boundingRect().width(), self.text.boundingRect().height())
@@ -191,19 +190,19 @@ def generateCode():
 			return True
 		return False
 	strExport = "@@ Generated by Digger v" + __version__ + "\n"
-	for k in roomList:
-		strExport += "@dig/teleport " + k.name + "\n"
-		if k.desc != "":
-			strExport += "@desc here=" + mushEscape(str(k.desc)) + "\n"
-		strExport += "think set(me, " + diggerconf.attributePrefix + str(k.id) + ":%l)\n"
+	for k, room in roomList.iteritems():
+		strExport += "@dig/teleport " + room.name + "\n"
+		if room.desc != "":
+			strExport += "@desc here=" + mushEscape(str(room.desc)) + "\n"
+		strExport += "think set(me, " + diggerconf.attributePrefix + str(k) + ":%l)\n"
 
-	for k in roomList:
+	for k, room in roomList.iteritems():
 		sourceExits = []
-		for j in exitList:
-			if j.source == k.id: # Select source exits
-				sourceExits.append(j)
-		if isCode(k.code) or sourceExits:
-			strExport += "@tel [v(" + diggerconf.attributePrefix + str(k.id) + ")]\n"
+		for j, exit in exitList.iteritems():
+			if exit.source == k: # Select source exits
+				sourceExits.append(exit)
+		if isCode(room.code) or sourceExits:
+			strExport += "@tel [v(" + diggerconf.attributePrefix + str(k) + ")]\n"
 		for j in sourceExits:
 			aliasString = ""
 			if j.alias != "":
@@ -214,9 +213,9 @@ def generateCode():
 				strExport += "@open " + j.name + aliasString + "\n"
 			if j.desc != "":
 				strExport += "@desc " + j.name + "=" + mushEscape(str(j.desc)) + "\n"
-		if isCode(k.code):
+		if isCode(room.code):
 			if diggerconf.enableImports:
-				for codeLine in k.code:
+				for codeLine in room.code:
 					codeWords = codeLine.split()
 					if codeWords[0] == "@@@" and codeWords[1] == "import":
 						fname = str(" ".join(codeWords[2:]))
@@ -229,14 +228,14 @@ def generateCode():
 					else:
 						strExport += codeLine + "\n"
 			else:
-				for codeLine in k.code:
+				for codeLine in room.code:
 					strExport += codeLine + "\n"
 	if diggerconf.clearAttributes:
 		for k in roomList:
-			strExport += "&" + diggerconf.attributePrefix  + str(k.id) + " me\n"
+			strExport += "&" + diggerconf.attributePrefix  + str(k) + " me\n"
 	if diggerconf.exportLabels:
-		for k in labelList:
-			strExport += "think LABEL: *** " + k.normalText + " ***\n"
+		for k, label in labelList.iteritems():
+			strExport += "think LABEL: *** " + label.normalText + " ***\n"
 	return strExport
 
 def exportCodeToFile():
@@ -414,7 +413,7 @@ class newExitName(QDialog):
 		layout.addRow(self.hbox)
 		layout.addRow(self.btn1)
 		self.setLayout(layout)
-		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
+		self.btn1.clicked.connect(self.accept)
 
 		self.checkBox.toggled.connect(self.ButtonHide)
 		self.checkBox.toggle()
@@ -501,10 +500,10 @@ class editExit(QDialog):
 	def setData(self):
 		self.combo2.addItem("#-1: No destination")
 		self.rDict["#-1: No destination"] = -1
-		for i in roomList:
-			self.rDict[str("#" + str(i.id) + ": " + i.name)] = i.id
-			self.combo1.addItem("#" + str(i.id) + ": " + i.name)
-			self.combo2.addItem("#" + str(i.id) + ": " + i.name)
+		for i, room in roomList.iteritems():
+			self.rDict[str("#" + str(i) + ": " + room.name)] = i
+			self.combo1.addItem("#" + str(i) + ": " + room.name)
+			self.combo2.addItem("#" + str(i) + ": " + room.name)
 	def fillData(self, exit):
 		self.le.setText(exitList[exit].name)
 		self.combo1.setCurrentIndex(self.combo1.findText("#" + str(exitList[exit].source) + ": " + roomList[exitList[exit].source].name))
@@ -527,5 +526,5 @@ class addLabel(QDialog):
 		self.setWindowTitle("Add Label")
 		self.btn1 = QPushButton("Ok")
 		layout.addRow(self.lbl, self.le)
-		self.connect(self.btn1, SIGNAL("clicked()"), self, SLOT("accept()"))
+		self.btn1.clicked.connect(self.accept)
 		layout.addRow(self.btn1)
