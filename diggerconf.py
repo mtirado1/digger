@@ -19,7 +19,7 @@ clearAttributes = True
 def toBoolean(str):
 	return str == "True"
 
-def loadConfigFile(): # Load and store configuration variables
+def loadConfigFile(export): # Load and store configuration variables
 	global aliasDict
 	global roomCode
 	global roomColor
@@ -34,7 +34,7 @@ def loadConfigFile(): # Load and store configuration variables
 	global roomSize
 	global roomCenter
 	fname = "digger.conf"
-	if not os.path.exists(fname): # File exists?
+	if (not os.path.exists(fname)) and  not export: # File exists?
 		print("Config file " + fname + " not found. Using default values")
 	else:
 		with open(fname) as f:
@@ -71,4 +71,5 @@ def loadConfigFile(): # Load and store configuration variables
 						size += 1
 					roomSize = size
 					roomCenter = (size - 1) / 2
-	print("Successfully loaded config options")
+	if not export:
+		print("Successfully loaded config options")

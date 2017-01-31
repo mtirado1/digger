@@ -163,9 +163,11 @@ class Main(QtGui.QMainWindow):
 		root = DOMTree.documentElement
 		if root.tagName != "DIGGER":
 			raise ValueError, "not a Digger XML file"
+			return 1
 		maps = root.getElementsByTagName("map")[0]
 		self.readMapNode(maps)
 		self.drawAll()
+		return 0
 
 	def openFile(self):
 		fname = QFileDialog.getOpenFileName(self, 'Open file', '/',"XML Files (*.xml)")
@@ -505,8 +507,20 @@ class Main(QtGui.QMainWindow):
 			labelList[objectClicked].box.setRect(0, 0, labelList[objectClicked].text.boundingRect().width(), labelList[objectClicked].text.boundingRect().height())
 
 if __name__ == "__main__":
-	diggerconf.loadConfigFile()
 	app = QtGui.QApplication(sys.argv)
 	window = Main()
-	window.show()
-	sys.exit(app.exec_())
+	if len(sys.argv) > 2:
+		if sys.argv[1] == "--export" or sys.argv[1] == "-e":
+			if not os.path.exists(sys.argv[2]):
+				print "Error: File not found."
+				sys.exit()
+			diggerconf.loadConfigFile(True)
+			fname = sys.argv[2]
+			if window.populateFromDOM(fname):
+				sys.exit()
+			window.fileName = fname
+			print generateCode(window.fileName)
+	else:
+		diggerconf.loadConfigFile(False)
+		window.show()
+		sys.exit(app.exec_())
