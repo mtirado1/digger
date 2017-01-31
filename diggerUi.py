@@ -55,7 +55,6 @@ class mapView(QtGui.QGraphicsView):
 			self.scale(factor, factor)
 		elif factor == -1: # Zoom out
 			factor = 0.8
-			#if self.zoomFactor*factor >=1:
 			if self.parent().ui.scene.width()*self.zoomFactor != self.width() and self.parent().ui.scene.width()*self.zoomFactor*factor >= self.width():
 				self.zoomFactor *= factor
 				self.scale(factor, factor)
@@ -172,14 +171,12 @@ class mapView(QtGui.QGraphicsView):
 			menu.addSeparator()
 			actionCopy = menu.addAction("Copy")
 			actionCopy.setShortcut(QtGui.QKeySequence("Ctrl+C"))
-			actionExitList = []
-			actionExitId = []
+			actionExitList = {}
 			menuEnabled = False
 			for f in exitList:
 				if exitList[f].source == objectClicked:
 					menuEnabled = True
-					actionExitId.append(f)
-					actionExitList.append(exitMenu.addAction(exitList[f].name))
+					actionExitList[f] = exitMenu.addAction(exitList[f].name)
 			exitMenu.setEnabled(menuEnabled)
 			action = menu.exec_(event.globalPos())
 			if action == actionEditRoom: # Edit a room
@@ -200,9 +197,9 @@ class mapView(QtGui.QGraphicsView):
 			elif action == actionCopy: # Copy this Room
 				self.parent().copyRoom(objectClicked)
 			else:
-				for k in xrange(len(actionExitList)):
+				for k in actionExitList:
 					if action == actionExitList[k]:
-						self.parent().editExitProperties(actionExitId[k])
+						self.parent().editExitProperties(k)
 						break
 		#User clicked on a label
 		elif check == 2:

@@ -81,7 +81,7 @@ def saveToFile(fname, parent):
 		if exit.alias != "":
 			stream << "\t\t<alias>" << Qt.escape(exit.alias) << "</alias>\n"
 		stream << "\t</exit>\n"
-	for i, label in labelList:
+	for i, label in labelList.iteritems:
 		stream << ("\t<label x='%d' y='%d'>" % (label.x, label.y))
 		stream << Qt.escape(label.normalText)
 		stream << "</label>\n"
@@ -98,7 +98,7 @@ class labelBox(QGraphicsRectItem):
 	def mouseReleaseEvent(self, event):
 		if self.moved == 1:
 			QGraphicsRectItem.mouseReleaseEvent(self, event)
-			self.scene().parent().parent().drawLabel(labelList[self.index])
+			self.scene().parent().parent().drawLabel(self.index)
 		self.moved = 0
 
 	def mouseMoveEvent(self, event):
@@ -117,7 +117,6 @@ class roomBox(QGraphicsRectItem):
 		self.setFlag(QGraphicsItem.ItemIsSelectable, True)
 		self.index = 0
 		self.moved = 0
-		#self.setRect(QRectF(0,0,1080,683))
 
 	def mouseReleaseEvent(self, event):
 		if self.moved == 1:

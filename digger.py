@@ -295,7 +295,7 @@ class Main(QtGui.QMainWindow):
 	def drawExit(self, key):
 		exit = exitList[key]
 		roomSource = roomList[exitList[key].source]
-		roomDest   = roomList[exitList[key].dest]
+
 
 		coord_a = roomSource.x + roomSource.center
 		coord_b = roomSource.y + roomSource.center
@@ -303,6 +303,7 @@ class Main(QtGui.QMainWindow):
 			coord_c = coord_a + 2 * roomSource.center
 			coord_d = coord_b + 2 * roomSource.center
 		else:
+			roomDest = roomList[exitList[key].dest]
 			coord_c = roomDest.x + roomDest.center
 			coord_d = roomDest.y + roomDest.center
 		exit.line.setLine(coord_a, coord_b, coord_c, coord_d)
@@ -311,8 +312,8 @@ class Main(QtGui.QMainWindow):
 	def drawLabel(self, id):
 		labelList[id].text.setZValue(10)
 		labelList[id].box.setZValue(9)
-		labelList[id].text.setPos(label.x, label.y)
-		labelList[id].box.setPos(label.x, label.y)
+		labelList[id].text.setPos(labelList[id].x, labelList[id].y)
+		labelList[id].box.setPos(labelList[id].x, labelList[id].y)
 
 	def digRoom(self, x_, y_):
 		roomDialog = newRoom(self)
@@ -471,7 +472,7 @@ class Main(QtGui.QMainWindow):
 			exitList[index].desc = editDialog.te1.toPlainText()
 			items = []
 			for x in xrange(editDialog.list1.count()):
-				items.append(editDialog.list1.item(x).text())
+				items.append(str(editDialog.list1.item(x).text()))
 			exitList[index].alias = ";".join(items)
 
 			# Draw ONLY the modified exit and the affected rooms
@@ -508,19 +509,18 @@ class Main(QtGui.QMainWindow):
 
 if __name__ == "__main__":
 	app = QtGui.QApplication(sys.argv)
+	diggerconf.loadConfigFile(len(sys.argv) > 2)
 	window = Main()
 	if len(sys.argv) > 2:
 		if sys.argv[1] == "--export" or sys.argv[1] == "-e":
 			if not os.path.exists(sys.argv[2]):
 				print "Error: File not found."
 				sys.exit()
-			diggerconf.loadConfigFile(True)
 			fname = sys.argv[2]
 			if window.populateFromDOM(fname):
 				sys.exit()
 			window.fileName = fname
 			print generateCode(window.fileName)
 	else:
-		diggerconf.loadConfigFile(False)
 		window.show()
 		sys.exit(app.exec_())
