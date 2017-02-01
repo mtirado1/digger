@@ -81,7 +81,7 @@ def saveToFile(fname, parent):
 		if exit.alias != "":
 			stream << "\t\t<alias>" << Qt.escape(exit.alias) << "</alias>\n"
 		stream << "\t</exit>\n"
-	for i, label in labelList.iteritems:
+	for i, label in labelList.iteritems():
 		stream << ("\t<label x='%d' y='%d'>" % (label.x, label.y))
 		stream << Qt.escape(label.normalText)
 		stream << "</label>\n"
@@ -237,14 +237,14 @@ def generateCode(title):
 			strExport += "think LABEL: *** " + label.normalText + " ***\n"
 	return strExport
 
-def exportCodeToFile():
+def exportCodeToFile(title):
 	fname = QFileDialog.getSaveFileName(None, 'Export to File', '/', "")
 	fsave = QFile(fname)
 	if not fsave.open(QIODevice.WriteOnly):
 		raise IOError, unicode(fsave.errorString())
 	stream = QTextStream(fsave)
 	stream.setCodec("UTF-8")
-	stream << generateCode()
+	stream << generateCode(title)
 
 class exportClass(QDialog):
 	def __init__(self, parent = None):
