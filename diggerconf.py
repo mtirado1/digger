@@ -1,5 +1,7 @@
 import os
 
+version = "1.3.1"
+
 aliasDict = {}
 roomCode  = []
 roomColor = "#FF0000"

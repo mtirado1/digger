@@ -38,10 +38,10 @@ Digger can export worlds to [PennMUSH](https://github.com/pennmush/pennmush),
 
 ## Running
 
-To run Digger, you need to install python on your system and Qt4.
+To run Digger, you need to install python on your system and the Qt4 Library.
 
 On Ubuntu:
 
 `sudo apt-get install python-qt4`
 
-`python digger.py`
+`python main.py`

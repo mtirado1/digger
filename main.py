@@ -7,7 +7,7 @@ import xml.dom.minidom
 from xml.dom.minidom import parse
 from PyQt4 import QtCore, QtGui
 from diggerUi import *
-from diggerfuncs import __version__
+from mush import *
 import platform
 import diggerconf
 
@@ -185,21 +185,20 @@ class Main(QtGui.QMainWindow):
 				self.fileName = fname
 				self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 				self.isNewFile = 0
-				saveToFile(fname, self)
+				saveToFile(fname, self, roomList, exitList, labelList)
 		else:
 			fname = self.fileName
-			saveToFile(fname, self)
+			saveToFile(fname, self, roomList, exitList, labelList)
 	def saveFileAs(self):
 		fname = QFileDialog.getSaveFileName(self, 'Save As', '/', "XML Files (*.xml)")
 		if fname:
 			self.fileName = fname
 			self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
-			saveToFile(fname, self)
+			saveToFile(fname, self, roomList, exitList, labelList)
 			self.isNewFile = 0
 
 	def viewAbout(self):
-		global __version__
-		QMessageBox.about(self, "About Digger", """<b>Digger</b> v %s<p>Copyright &copy; 2016 Martin Tirado. All rights reserved. <p> This program can be used to design MUSH words through a graphical interface. <p> Python %s - Qt %s - PyQt %s on %s <p> Hosted on <a href='https://github.com/mtirado1/digger'> Github </a>""" % (__version__, platform.python_version(), QT_VERSION_STR, PYQT_VERSION_STR, platform.system()))
+		QMessageBox.about(self, "About Digger", """<b>Digger</b> v %s<p>Copyright &copy; 2016 Martin Tirado. All rights reserved. <p> This program can be used to design MUSH words through a graphical interface. <p> Python %s - Qt %s - PyQt %s on %s <p> Hosted on <a href='https://github.com/mtirado1/digger'> Github </a>""" % (diggerconf.version, platform.python_version(), QT_VERSION_STR, PYQT_VERSION_STR, platform.system()))
 
 	def setOptions(self):
 		optionsDialog = optionsClass(self)
@@ -520,7 +519,7 @@ if __name__ == "__main__":
 			if window.populateFromDOM(fname):
 				sys.exit()
 			window.fileName = fname
-			print generateCode(window.fileName)
+			print generateCode(window.fileName, roomList, exitList, labelList)
 	else:
 		window.show()
 		sys.exit(app.exec_())
