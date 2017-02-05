@@ -2,7 +2,6 @@
 
 
 import sys
-import math
 import xml.dom.minidom
 from xml.dom.minidom import parse
 from PyQt4 import QtCore, QtGui
@@ -12,11 +11,6 @@ import platform
 import diggerconf
 
 
-try:
-	_fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-	def _fromUtf8(s):
-		return s
 
 try:
 	_encoding = QtGui.QApplication.UnicodeUTF8

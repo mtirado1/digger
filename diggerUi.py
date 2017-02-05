@@ -59,9 +59,12 @@ class mapView(QtGui.QGraphicsView):
 				self.zoomFactor *= factor
 				self.scale(factor, factor)
 
-	def isWithin(self, a, b, r):
-		#Checks if a is within b+r and b-r
-		return (a >= b) and (a <= b+r)
+	def cursorInObject(self, x, y, bx, rx, by, ry):
+		return (x >= bx) and (x <= bx + rx) and (y >= by) and (y <= by + ry)
+	def cursorInRoom(self, pos, room):
+		return self.cursorInObject(pos.x(), pos.y(), room.x, room.size, room.y, room.size)
+	def cursorInLabel(self, pos, label):
+		return self.cursorInObject(pos.x(), pos.y(), label.x, label.box.boundingRect().width(), label.y, label.box.boundingRect().height())
 
 	def mouseMoveEvent(self, event):
 		QGraphicsView.mouseMoveEvent(self, event)
@@ -92,7 +95,7 @@ class mapView(QtGui.QGraphicsView):
 		if self.joinExit == 1:
 			check = 0
 			for i, room in roomList.iteritems():
-				if self.isWithin(scenePos.x(), room.x, room.size) and self.isWithin(scenePos.y(), room.y, room.size):
+				if self.cursorInRoom(scenePos, room):
 					check = 1
 					self.parent().openExitName(self.source, i)
 					self.parent().ui.scene.removeItem(self.tempLine)
@@ -103,7 +106,7 @@ class mapView(QtGui.QGraphicsView):
 		elif self.joinExit == 2: # Chain exit
 			check = 0
 			for i, room in roomList.iteritems():
-				if self.isWithin(scenePos.x(), room.x, room.size) and self.isWithin(scenePos.y(), room.y, room.size):
+				if self.cursorInRoom(scenePos, room):
 					check = 1
 					self.chainRoom.append(i)
 					self.chainLine.append(QGraphicsLineItem())
@@ -127,12 +130,12 @@ class mapView(QtGui.QGraphicsView):
 		else: # Pan scene across graphicsView
 			check = False
 			for i, room in roomList.iteritems(): # Is the cursor over a room?
-				if self.isWithin(scenePos.x(), room.x, room.size) and self.isWithin(scenePos.y(), room.y, room.size): # Pan View
+				if self.cursorInRoom(scenePos, room):
 					self.selectedRoom = i
 					check = True
 					break
 			for i, label in labelList.iteritems(): # Is the cursor over a label?
-				if self.isWithin(scenePos.x(), label.x, label.box.boundingRect().width()) and self.isWithin(scenePos.y(), label.y, label.box.boundingRect().height()):
+				if self.cursorInLabel(scenePos, label):
 					check = True
 					break
 			if event.button() == Qt.LeftButton and not check:
@@ -150,13 +153,13 @@ class mapView(QtGui.QGraphicsView):
 		if scenePos.x() > self.parent().ui.scene.width() or scenePos.y() > self.parent().ui.scene.height(): # Cursor outside of scene
 			return
 
-		for i in roomList:
-			if self.isWithin(self.mapToScene(eventPos).x(), roomList[i].x, roomList[i].size) and self.isWithin(self.mapToScene(eventPos).y(), roomList[i].y, roomList[i].size):
+		for i, room in roomList.iteritems():
+			if self.cursorInRoom(scenePos, room):
 				objectClicked = i
 				check = 1
 		if check == 0: # If not, check if user right-clicked on a label
-			for i in labelList:
-				if self.isWithin(self.mapToScene(eventPos).x(), labelList[i].x, labelList[i].box.boundingRect().width()) and self.isWithin(self.mapToScene(eventPos).y(), labelList[i].y, labelList[i].box.boundingRect().height()):
+			for i, label in labelList.iteritems():
+				if self.cursorInLabel(scenePos, label):
 					objectClicked = i
 					check = 2
 		#User clicked on a room
@@ -170,7 +173,7 @@ class mapView(QtGui.QGraphicsView):
 			actionDeleteRoom = menu.addAction("Delete Room")
 			menu.addSeparator()
 			actionCopy = menu.addAction("Copy")
-			actionCopy.setShortcut(QtGui.QKeySequence("Ctrl+C"))
+			actionCopy.setShortcut("Ctrl+C")
 			actionExitList = {}
 			menuEnabled = False
 			for f in exitList:
@@ -219,7 +222,7 @@ class mapView(QtGui.QGraphicsView):
 			actionAddLabel = menu.addAction("Add Label")
 			menu.addSeparator()
 			actionPaste = menu.addAction("Paste")
-			actionPaste.setShortcut(QtGui.QKeySequence("Ctrl+V"))
+			actionPaste.setShortcut("Ctrl+V")
 			action = menu.exec_(event.globalPos())
 			if action == actionNewRoom:
 				self.parent().digRoom(scenePos.x(), scenePos.y())
