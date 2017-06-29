@@ -2,15 +2,11 @@
 
 
 import sys
-import xml.dom.minidom
-from xml.dom.minidom import parse
 from PyQt4 import QtCore, QtGui
 from diggerUi import *
 from mush import *
 import platform
 import diggerconf
-
-
 
 try:
 	_encoding = QtGui.QApplication.UnicodeUTF8
@@ -19,7 +15,6 @@ try:
 except AttributeError:
 	def _translate(context, text, disambig):
 		return QtGui.QApplication.translate(context, text, disambig)
-
 
 
 class Main(QtGui.QMainWindow):
@@ -72,123 +67,89 @@ class Main(QtGui.QMainWindow):
 		for room in roomList:
 			self.drawRoom(room)
 
-	def readMapNode(self, element):
-		load_map_width = 0
-		load_map_height = 0
-		def getText(element):
-			if element.childNodes:
-				return element.childNodes[0].data
-			return "" # Empty tag
+	def loadMap(self, Map):
+		self.bColor = Map.bcolor
+		self.ui.scene.setBackgroundBrush(QColor(Map.bcolor))
+		self.ui.scene.setSceneRect(0, 0, Map.width, Map.height)
+		for i in Map.rooms: # Load all rooms to scene
+			roomList[i] = Map.rooms[i]
+			self.ui.scene.addItem(roomList[i].box)
+			roomList[i].box.move_restrict_rect = QRectF(0, 0, Map.width, Map.height)
+			self.ui.scene.addItem(roomList[i].text)
 
-		def readLabelNode(element):
-			load_label_x = int(element.getAttribute("x"))
-			load_label_y = int(element.getAttribute("y"))
-			load_label_text = getText(element)
-			id = findNewId(labelList)
-			labelList[id] = Label(load_label_text, id, load_label_x, load_label_y)
-			self.ui.scene.addItem(labelList[id].text)
-			self.ui.scene.addItem(labelList[id].box)
-			labelList[id].box.move_restrict_rect = QRectF(0, 0, load_map_width, load_map_height)
-		def readRoomNode(element):
-			load_room_id = int(element.getAttribute("id"))
-			load_room_x = int(element.getAttribute("x"))
-			load_room_y = int(element.getAttribute("y"))
-			load_room_bcolor = element.getAttribute("bcolor")
-			load_room_center = int(element.getAttribute("size"))
-			load_room_name = getText(element.getElementsByTagName("name")[0])
-			load_room_desc = ""
-			load_room_code = []
-			if element.getElementsByTagName("description"):
-				load_room_desc = getText(element.getElementsByTagName("description")[0])
-			for i in element.getElementsByTagName("code"):
-				load_room_code.append(getText(i))
-			roomList[load_room_id] = Room(load_room_name, load_room_id, self)
-			roomList[load_room_id].desc = mushUnEscape(load_room_desc)
-			roomList[load_room_id].x = load_room_x
-			roomList[load_room_id].y = load_room_y
-			roomList[load_room_id].bColor = load_room_bcolor
-			roomList[load_room_id].center = load_room_center
-			roomList[load_room_id].size = (load_room_center * 2) + 1
-			roomList[load_room_id].code = load_room_code
-			self.ui.scene.addItem(roomList[load_room_id].box)
-			roomList[load_room_id].box.move_restrict_rect = QRectF(0, 0, load_map_width, load_map_height)
-			self.ui.scene.addItem(roomList[load_room_id].text)
+		for i in Map.exits: # Load exits
+			exitList[i] = Map.exits[i]
+			self.ui.scene.addItem(exitList[i].line)
 
-		def readExitNode(element):
-			load_exit_id = int(element.getAttribute("id"))
-			load_exit_source = int(element.getAttribute("source"))
-			load_exit_dest = int(element.getAttribute("destination"))
-			load_exit_alias = []
-			load_exit_name = getText(element.getElementsByTagName("name")[0])
-			load_exit_desc = ""
-			if element.getElementsByTagName("description"):
-				load_exit_desc = getText(element.getElementsByTagName("description")[0])
-			for i in element.getElementsByTagName("alias"):
-				load_exit_alias.append(getText(i))
-			exitList[load_exit_id] = Exit(load_exit_name, load_exit_source)
-			exitList[load_exit_id].alias = ";".join(load_exit_alias)
-			exitList[load_exit_id].dest = load_exit_dest
-			exitList[load_exit_id].desc = mushUnEscape(load_exit_desc)
-			self.ui.scene.addItem(exitList[load_exit_id].line)
-
-		load_map_width =  int(element.getAttribute("width"))
-		load_map_height = int(element.getAttribute("height"))
-		load_map_bcolor = element.getAttribute("bcolor")
-		rooms = element.getElementsByTagName("room")
-		exits = element.getElementsByTagName("exit")
-		labels = element.getElementsByTagName("label")
-		for i in rooms:
-			readRoomNode(i)
-		for i in exits:
-			readExitNode(i)
-		for i in labels:
-			readLabelNode(i)
-
-		self.bColor = load_map_bcolor
-		self.ui.scene.setBackgroundBrush(QColor(load_map_bcolor))
-		self.ui.scene.setSceneRect(0, 0, load_map_width, load_map_height)
+		for i in Map.labels: # Finally, load labels
+			labelList[i] = Map.labels[i]
+			self.ui.scene.addItem(labelList[i].text)
+			self.ui.scene.addItem(labelList[i].box)
+			labelList[i].box.move_restrict_rect = QRectF(0, 0, Map.width, Map.height)
+		self.drawAll()
 
 	def populateFromDOM(self, fname):
 		roomList.clear()
 		exitList.clear()
 		labelList.clear()
 		self.ui.scene.clear()
-		DOMTree = xml.dom.minidom.parse(str(fname))
-		root = DOMTree.documentElement
-		if root.tagName != "DIGGER":
-			raise ValueError, "not a Digger XML file"
-			return 1
-		maps = root.getElementsByTagName("map")[0]
-		self.readMapNode(maps)
-		self.drawAll()
-		return 0
+
+		fmap = importXml(self, fname)
+		self.loadMap(fmap) # Load map
+
+	def populateFromJson(self, fname):
+		roomList.clear()
+		exitList.clear()
+		labelList.clear()
+		self.ui.scene.clear()
+
+		fmap = importJson(self, fname)
+		self.loadMap(fmap) # Load map
+
 
 	def openFile(self):
-		fname = QFileDialog.getOpenFileName(self, 'Open file', '/',"XML Files (*.xml)")
+		fname = QFileDialog.getOpenFileName(self, 'Open file', '/',"XML or Json Files (*.xml *.json)")
 		if fname:
-			self.populateFromDOM(fname)
+			diggerconf.exportType = fname.split('.')[-1]
+			if diggerconf.exportType == 'xml':
+				self.populateFromDOM(fname)
+			elif diggerconf.exportType == 'json':
+				self.populateFromJson(fname)
 			self.fileName = fname
 			self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 			self.isNewFile = 0
 
 
 	def saveFile(self):
+		fname = ""
 		if self.isNewFile == 1:
-			fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "XML Files (*.xml)")
+			print diggerconf.exportType
+			if diggerconf.exportType == 'xml':
+				fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "XML Files (*.xml)")
+			elif diggerconf.exportType == 'json':
+				fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "JSON Files (*.json)")
 			if fname:
 				self.fileName = fname
 				self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 				self.isNewFile = 0
-				saveToFile(fname, self, roomList, exitList, labelList)
 		else:
 			fname = self.fileName
-			saveToFile(fname, self, roomList, exitList, labelList)
+		if fname:
+			if diggerconf.exportType == 'xml':
+				saveToXml(fname, self, roomList, exitList, labelList)
+			elif diggerconf.exportType == 'json':
+				saveToJson(fname, self, roomList, exitList, labelList)
+
 	def saveFileAs(self):
-		fname = QFileDialog.getSaveFileName(self, 'Save As', '/', "XML Files (*.xml)")
+		fname = QFileDialog.getSaveFileName(self, 'Save As', '/', "XML or JSON Files (*.xml *.json)")
 		if fname:
 			self.fileName = fname
+			extension = fname.split('.')[-1]
 			self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
-			saveToFile(fname, self, roomList, exitList, labelList)
+			if extension == 'xml':
+				saveToXml(fname, self, roomList, exitList, labelList)
+			if extension == 'json':
+				saveToJson(fname, self, roomList, exitList, labelList)
 			self.isNewFile = 0
 
 	def viewAbout(self):
@@ -256,6 +217,7 @@ class Main(QtGui.QMainWindow):
 		roomList[id].box.setPos(roomList[id].x, roomList[id].y)
 
 		roomString = "<p><b>" + roomList[id].name + "</b>"
+
 		roomString += "<br />Exits:<br />"
 		for i, k in exitList.iteritems():
 			if k.source == id:

@@ -27,7 +27,7 @@ Digger can export worlds to [PennMUSH](https://github.com/pennmush/pennmush),
 
 * No mushcode required
 
-* Exports to XML and mushcode
+* Exports to XML, JSON, and mushcode
 
 * Labels
 

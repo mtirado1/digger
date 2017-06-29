@@ -1,5 +1,6 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+import json
 import diggerconf
 
 def mushUnEscape(str):
@@ -33,7 +34,56 @@ def mushEscape(str):
 	return retStr
 
 
-def saveToFile(fname, parent, rooms, exits, labels):
+def saveToJson(fname, parent, rooms, exits, labels):
+	fsave = QFile(fname)
+	if not fsave.open(QIODevice.WriteOnly):
+		raise IOError, unicode(fsave.errorString())
+	stream = QTextStream(fsave)
+	stream.setCodec("UTF-8")
+	stream << ('{\n')
+	stream << ('\t"map": {\n')
+	stream << ('\t\t"width": %d,\n' % parent.ui.scene.width())
+	stream << ('\t\t"height": %d,\n' % parent.ui.scene.height())
+	stream << ('\t\t"bcolor": "%s",\n' % parent.bColor)
+
+	jroomList = []
+	for i, room in rooms.iteritems():
+		jroomList.append({
+		"id":i,
+		"x":room.x,
+		"y":room.y,
+		"bcolor":room.bColor,
+		"size":room.center,
+		"name":unicode(room.name),
+		"description":unicode(mushEscape(room.desc)),
+		"code":[unicode(x) for x in room.code]
+		})
+	stream << ('\t\t"rooms":\n\t\t' + json.dumps(jroomList, indent = 4).replace('\n', '\n\t\t') + ',\n')
+
+	jexitList = []
+	for i, exit in exits.iteritems():
+		jexitList.append({
+		"id":i,
+		"source":exit.source,
+		"destination":exit.dest,
+		"name":unicode(exit.name),
+		"description":unicode(mushEscape(exit.desc)),
+		"alias":unicode(exit.alias)
+		})
+	stream << ('\t\t"exits":\n\t\t' + json.dumps(jexitList, indent = 4).replace('\n', '\n\t\t') + ',\n')
+
+	jlabelList = []
+	for i, label in labels.iteritems():
+		jlabelList.append({
+		"x":label.x,
+		"y":label.y,
+		"text":unicode(label.normalText)
+		})
+	stream << ('\t\t"labels":\n\t\t' + json.dumps(jlabelList, indent = 4).replace('\n', '\n\t\t') + '\n')
+	stream << ('\t}\n')
+	stream << ('}\n')
+
+def saveToXml(fname, parent, rooms, exits, labels):
 	fsave = QFile(fname)
 	if not fsave.open(QIODevice.WriteOnly):
 		raise IOError, unicode(fsave.errorString())
@@ -119,3 +169,4 @@ def generateCode(title, rooms, exits, labels):
 		for k, label in labels.iteritems():
 			strExport += "think LABEL: *** " + label.normalText + " ***\n"
 	return strExport
+

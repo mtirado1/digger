@@ -17,6 +17,7 @@ enableImports = False
 monospaceEdit = True
 exportLabels = False
 clearAttributes = True
+exportType = "xml"
 
 def toBoolean(str):
 	return str == "True"
@@ -32,6 +33,7 @@ def loadConfigFile(export): # Load and store configuration variables
 	global monospaceEdit
 	global exportLabels
 	global clearAttributes
+	global exportType
 	global attributePrefix
 	global roomSize
 	global roomCenter
@@ -67,6 +69,8 @@ def loadConfigFile(export): # Load and store configuration variables
 					attributePrefix = words[1]
 				elif words[0] == "clear_attrs":
 					clearAttributes = toBoolean(words[1])
+				elif words[0] == "export_type":
+					exportType = words[1]
 				elif words[0] == "room_size":
 					size = int(words[1])
 					if size % 2 != 0:

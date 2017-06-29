@@ -3,6 +3,9 @@ import sys
 from mush import *
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+import xml.dom.minidom
+from xml.dom.minidom import parse
+import json
 
 
 #######################################
@@ -71,6 +74,15 @@ class roomBox(QGraphicsRectItem):
 		if self.move_restrict_rect.contains(event.scenePos()):
 			QGraphicsRectItem.mouseMoveEvent(self, event)
 
+class Map:
+	def __init__(self):
+		self.width = diggerconf.mapWidth
+		self.height = diggerconf.mapHeight
+		self.bcolor = diggerconf.mapColor
+		self.rooms = {}
+		self.exits = {}
+		self.labels = {}
+
 class Room:
 	def __init__(self, name, id, parent):
 		self.name = name
@@ -128,6 +140,102 @@ def exportCodeToFile(title):
 	stream = QTextStream(fsave)
 	stream.setCodec("UTF-8")
 	stream << generateCode(title, roomList, exitList, labelList)
+
+def importJson(self, fname):
+	with open(fname) as f:
+		data = json.load(f)
+		map = data["map"]
+		retMap = Map()
+		retMap.width = map["width"]
+		retMap.height = map["height"]
+		retMap.bcolor = map["bcolor"]
+		rooms = map["rooms"]
+		exits = map["exits"]
+		labels = map["labels"]
+		for r in rooms:
+			id = r["id"]
+			retMap.rooms[id] = Room(r["name"], id, self)
+			retMap.rooms[id].x = r["x"]
+			retMap.rooms[id].y = r["y"]
+			retMap.rooms[id].desc = r["description"]
+			retMap.rooms[id].bColor = r["bcolor"]
+			retMap.rooms[id].center = r["size"]
+			retMap.rooms[id].size = r["size"] * 2 + 1
+			retMap.rooms[id].code = r["code"]
+		for e in exits:
+			id = e["id"]
+			retMap.exits[id] = Exit(e["name"], e["source"])
+			retMap.exits[id].dest = e["destination"]
+			retMap.exits[id].desc = e["description"]
+			retMap.exits[id].alias = e["alias"]
+		for l in labels:
+			id = findNewId(retMap.labels)
+			retMap.labels[id] = Label(l["text"], l["x"], l["y"])
+		return retMap
+
+def importXml(self, fname):
+
+	def getText(element):
+		if element.childNodes:
+			return element.childNodes[0].data
+		return "" # Empty tag
+
+	retMap = Map()
+	DOMTree = xml.dom.minidom.parse(str(fname))
+	root = DOMTree.documentElement
+	if root.tagName != "DIGGER":
+		raise ValueError, "not a Digger XML file"
+		return 1
+	element = root.getElementsByTagName("map")[0]
+	retMap.width =  int(element.getAttribute("width"))
+	retMap.height = int(element.getAttribute("height"))
+	retMap.bcolor = element.getAttribute("bcolor")
+	rooms = element.getElementsByTagName("room")
+	exits = element.getElementsByTagName("exit")
+	labels = element.getElementsByTagName("label")
+	for element in rooms:
+		id = int(element.getAttribute("id"))
+		load_room_x = int(element.getAttribute("x"))
+		load_room_y = int(element.getAttribute("y"))
+		load_room_bcolor = element.getAttribute("bcolor")
+		load_room_center = int(element.getAttribute("size"))
+		load_room_desc = ""
+		load_room_code = []
+		if element.getElementsByTagName("description"):
+			load_room_desc = getText(element.getElementsByTagName("description")[0])
+		for i in element.getElementsByTagName("code"):
+			load_room_code.append(getText(i))
+		retMap.rooms[id] = Room(getText(element.getElementsByTagName("name")[0]), id, self)
+		retMap.rooms[id].desc = mushUnEscape(load_room_desc)
+		retMap.rooms[id].x = load_room_x
+		retMap.rooms[id].y = load_room_y
+		retMap.rooms[id].bColor = load_room_bcolor
+		retMap.rooms[id].center = load_room_center
+		retMap.rooms[id].size = (load_room_center * 2) + 1
+		retMap.rooms[id].code = load_room_code
+
+	for element in exits:
+		id = int(element.getAttribute("id"))
+		load_exit_source = int(element.getAttribute("source"))
+		load_exit_dest = int(element.getAttribute("destination"))
+		load_exit_alias = []
+		load_exit_name = getText(element.getElementsByTagName("name")[0])
+		load_exit_desc = ""
+		if element.getElementsByTagName("description"):
+			load_exit_desc = getText(element.getElementsByTagName("description")[0])
+		for i in element.getElementsByTagName("alias"):
+			load_exit_alias.append(getText(i))
+		retMap.exits[id] = Exit(load_exit_name, load_exit_source)
+		retMap.exits[id].alias = ";".join(load_exit_alias)
+		retMap.exits[id].dest = load_exit_dest
+		retMap.exits[id].desc = mushUnEscape(load_exit_desc)
+
+	for element in labels:
+		id = findNewId(retMap.labels)
+		retMap.labels[id] = Label(getText(element), int(element.getAttribute("x")), int(element.getAttribute("y")))
+
+	return retMap
+
 
 class exportClass(QDialog):
 	def __init__(self, parent = None):
