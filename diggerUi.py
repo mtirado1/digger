@@ -94,7 +94,7 @@ class mapView(QtGui.QGraphicsView):
 		QGraphicsView.mousePressEvent(self, event)
 		if self.joinExit == 1:
 			check = 0
-			for i, room in roomList.iteritems():
+			for i, room in roomList.items():
 				if self.cursorInRoom(scenePos, room):
 					check = 1
 					self.parent().openExitName(self.source, i)
@@ -105,7 +105,7 @@ class mapView(QtGui.QGraphicsView):
 			self.joinExit = 0
 		elif self.joinExit == 2: # Chain exit
 			check = 0
-			for i, room in roomList.iteritems():
+			for i, room in roomList.items():
 				if self.cursorInRoom(scenePos, room):
 					check = 1
 					self.chainRoom.append(i)
@@ -129,12 +129,12 @@ class mapView(QtGui.QGraphicsView):
 
 		else: # Pan scene across graphicsView
 			check = False
-			for i, room in roomList.iteritems(): # Is the cursor over a room?
+			for i, room in roomList.items(): # Is the cursor over a room?
 				if self.cursorInRoom(scenePos, room):
 					self.selectedRoom = i
 					check = True
 					break
-			for i, label in labelList.iteritems(): # Is the cursor over a label?
+			for i, label in labelList.items(): # Is the cursor over a label?
 				if self.cursorInLabel(scenePos, label):
 					check = True
 					break
@@ -153,12 +153,12 @@ class mapView(QtGui.QGraphicsView):
 		if scenePos.x() > self.parent().ui.scene.width() or scenePos.y() > self.parent().ui.scene.height(): # Cursor outside of scene
 			return
 
-		for i, room in roomList.iteritems():
+		for i, room in roomList.items():
 			if self.cursorInRoom(scenePos, room):
 				objectClicked = i
 				check = 1
 		if check == 0: # If not, check if user right-clicked on a label
-			for i, label in labelList.iteritems():
+			for i, label in labelList.items():
 				if self.cursorInLabel(scenePos, label):
 					objectClicked = i
 					check = 2

@@ -38,14 +38,14 @@ def loadConfigFile(export): # Load and store configuration variables
 	global roomSize
 	global roomCenter
 	fname = "digger.conf"
-	if (not os.path.exists(fname)) and  not export: # File exists?
+	if (not os.path.exists(fname)) and not export: # File exists?
 		print("Config file " + fname + " not found. Using default values")
 	else:
 		with open(fname) as f:
 			lines = f.readlines()
 		for line in lines:
 			words = line[:-1].split(" ")
-			words = filter(None, words) # Remove empty elements
+			words = list(filter(None, words)) # Remove empty elements
 			if len(words) > 0: # Line is not empty
 				if words[0] == "alias": # alias config option
 					aliasDict[words[1]] = " ".join(words[2:]).split(";") # load alias list

@@ -123,7 +123,6 @@ class Main(QtGui.QMainWindow):
 	def saveFile(self):
 		fname = ""
 		if self.isNewFile == 1:
-			print diggerconf.exportType
 			if diggerconf.exportType == 'xml':
 				fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "XML Files (*.xml)")
 			elif diggerconf.exportType == 'json':
@@ -153,7 +152,12 @@ class Main(QtGui.QMainWindow):
 			self.isNewFile = 0
 
 	def viewAbout(self):
-		QMessageBox.about(self, "About Digger", """<b>Digger</b> v %s<p>Copyright &copy; 2016 Martin Tirado. All rights reserved. <p> This program can be used to design MUSH words through a graphical interface. <p> Python %s - Qt %s - PyQt %s on %s <p> Hosted on <a href='https://github.com/mtirado1/digger'> Github </a>""" % (diggerconf.version, platform.python_version(), QT_VERSION_STR, PYQT_VERSION_STR, platform.system()))
+
+		text = """<b>Digger</b> v %s<p>Copyright &copy; 2017 Martin Tirado. All rights reserved. <p>
+				  This program can be used to design MUSH words through a graphical interface. <p>
+				  Python %s - Qt %s - PyQt %s on %s <p>
+				  Hosted on <a href='https://github.com/mtirado1/digger'> Github </a>"""
+		QMessageBox.about(self, "About Digger", text % (diggerconf.version, platform.python_version(), QT_VERSION_STR, PYQT_VERSION_STR, platform.system()))
 
 	def setOptions(self):
 		optionsDialog = optionsClass(self)
@@ -163,9 +167,9 @@ class Main(QtGui.QMainWindow):
 			self.ui.scene.setBackgroundBrush(optionsDialog.bColor)
 			self.roomBColor = optionsDialog.rColor.name()
 			self.ui.scene.setSceneRect(QRectF(0, 0, optionsDialog.sp.value(), optionsDialog.sp2.value()))
-			for x, room in roomList.iteritems():
+			for x, room in roomList.items():
 				room.box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
-			for x, label in labelList.iteritems():
+			for x, label in labelList.items():
 				label.box.move_restric_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
 
 	def exportDump(self):
@@ -219,7 +223,7 @@ class Main(QtGui.QMainWindow):
 		roomString = "<p><b>" + roomList[id].name + "</b>"
 
 		roomString += "<br />Exits:<br />"
-		for i, k in exitList.iteritems():
+		for i, k in exitList.items():
 			if k.source == id:
 				coord_a = roomList[id].x + roomList[id].center
 				coord_b = roomList[id].y + roomList[id].center
@@ -347,7 +351,7 @@ class Main(QtGui.QMainWindow):
 
 			if exitDialog.le.text() not in diggerconf.aliasDict: # Don't override alias tab
 				items = []
-				for x in xrange(exitDialog.list1.count()):
+				for x in range(exitDialog.list1.count()):
 					items.append(exitDialog.list1.item(x).text())
 				exitList[id_].alias = ";".join(items)
 
@@ -426,7 +430,7 @@ class Main(QtGui.QMainWindow):
 			exitList[index].dest = editDialog.rDict[str(editDialog.combo2.currentText())]
 			exitList[index].desc = editDialog.te1.toPlainText()
 			items = []
-			for x in xrange(editDialog.list1.count()):
+			for x in range(editDialog.list1.count()):
 				items.append(str(editDialog.list1.item(x).text()))
 			exitList[index].alias = ";".join(items)
 
@@ -469,13 +473,13 @@ if __name__ == "__main__":
 	if len(sys.argv) > 2:
 		if sys.argv[1] == "--export" or sys.argv[1] == "-e":
 			if not os.path.exists(sys.argv[2]):
-				print "Error: File not found."
+				print("Error: File not found.")
 				sys.exit()
 			fname = sys.argv[2]
 			if window.populateFromDOM(fname):
 				sys.exit()
 			window.fileName = fname
-			print generateCode(window.fileName, roomList, exitList, labelList)
+			print(generateCode(window.fileName, roomList, exitList, labelList))
 	else:
 		window.show()
 		sys.exit(app.exec_())

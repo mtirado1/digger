@@ -108,7 +108,7 @@ class Exit:
 		self.line = QGraphicsLineItem()
 		if str(name) in diggerconf.aliasDict:
 			self.name = diggerconf.aliasDict[str(name)][0]
-			for x in xrange(len(diggerconf.aliasDict[str(name)])):
+			for x in range(len(diggerconf.aliasDict[str(name)])):
 				if x != 0:
 					self.alias += diggerconf.aliasDict[str(name)][x] + ";"
 			self.alias = self.alias[:-1]
@@ -136,7 +136,7 @@ def exportCodeToFile(title):
 	fname = QFileDialog.getSaveFileName(None, 'Export to File', '/', "")
 	fsave = QFile(fname)
 	if not fsave.open(QIODevice.WriteOnly):
-		raise IOError, unicode(fsave.errorString())
+		raise IOError(unicode(fsave.errorString()))
 	stream = QTextStream(fsave)
 	stream.setCodec("UTF-8")
 	stream << generateCode(title, roomList, exitList, labelList)
@@ -184,7 +184,7 @@ def importXml(self, fname):
 	DOMTree = xml.dom.minidom.parse(str(fname))
 	root = DOMTree.documentElement
 	if root.tagName != "DIGGER":
-		raise ValueError, "not a Digger XML file"
+		raise ValueError("not a Digger XML file.")
 		return 1
 	element = root.getElementsByTagName("map")[0]
 	retMap.width =  int(element.getAttribute("width"))
@@ -490,7 +490,7 @@ class editExit(QDialog):
 	def setData(self):
 		self.combo2.addItem("#-1: No destination")
 		self.rDict["#-1: No destination"] = -1
-		for i, room in roomList.iteritems():
+		for i, room in roomList.items():
 			self.rDict[str("#" + str(i) + ": " + room.name)] = i
 			self.combo1.addItem("#" + str(i) + ": " + room.name)
 			self.combo2.addItem("#" + str(i) + ": " + room.name)
