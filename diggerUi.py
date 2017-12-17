@@ -1,5 +1,5 @@
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from diggerfuncs import *
 import diggerconf
 
@@ -12,13 +12,13 @@ except AttributeError:
 try:
 	_encoding = QtGui.QApplication.UnicodeUTF8
 	def _translate(context, text, disambig):
-		return QtGui.QApplication.translate(context, text, disambig, _encoding)
+		return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
 	def _translate(context, text, disambig):
-		return QtGui.QApplication.translate(context, text, disambig)
+		return QtWidgets.QApplication.translate(context, text, disambig)
 
 
-class mapView(QtGui.QGraphicsView):
+class mapView(QtWidgets.QGraphicsView):
 	def __init__(self, parent=None):
 		super(mapView, self).__init__(parent)
 		self.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
@@ -37,8 +37,8 @@ class mapView(QtGui.QGraphicsView):
 		self.chainLine = []
 
 		self.setMouseTracking(True)
-		self.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
-		self.setResizeAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
+		self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+		self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
 		self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 		self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 		self.zoomFactor = 1
@@ -240,56 +240,56 @@ class Ui_MainWindow(object):
 		self.graphicsView = mapView(MainWindow)
 		self.graphicsView.setObjectName(_fromUtf8("graphicsView"))
 		MainWindow.setCentralWidget(self.graphicsView)
-		self.menubar = QtGui.QMenuBar(MainWindow)
+		self.menubar = QtWidgets.QMenuBar(MainWindow)
 		self.menubar.setGeometry(QtCore.QRect(0, 0, 1080, 25))
 		self.menubar.setObjectName(_fromUtf8("menubar"))
-		self.menuFile = QtGui.QMenu(self.menubar)
+		self.menuFile = QtWidgets.QMenu(self.menubar)
 		self.menuFile.setObjectName(_fromUtf8("menuFile"))
-		self.menuEdit = QtGui.QMenu(self.menubar)
+		self.menuEdit = QtWidgets.QMenu(self.menubar)
 		self.menuEdit.setObjectName(_fromUtf8("menuEdit"))
-		self.menuView = QtGui.QMenu(self.menubar)
+		self.menuView = QtWidgets.QMenu(self.menubar)
 		self.menuView.setObjectName(_fromUtf8("menuView"))
-		self.actionOptions = QtGui.QAction(self.menubar)
+		self.actionOptions = QtWidgets.QAction(self.menubar)
 		self.actionOptions.setObjectName(_fromUtf8("actionOptions"))
-		self.actionAbout = QtGui.QAction(self.menubar)
+		self.actionAbout = QtWidgets.QAction(self.menubar)
 		self.actionAbout.setObjectName(_fromUtf8("actionAbout"))
 		MainWindow.setMenuBar(self.menubar)
-		self.statusbar = QtGui.QStatusBar(MainWindow)
+		self.statusbar = QtWidgets.QStatusBar(MainWindow)
 		self.statusbar.setObjectName(_fromUtf8("statusbar"))
 		MainWindow.setStatusBar(self.statusbar)
 
-		self.actionExport = QtGui.QAction(MainWindow)
+		self.actionExport = QtWidgets.QAction(MainWindow)
 		self.actionExport.setObjectName(_fromUtf8("actionExport"))
 		self.actionExport.setShortcut("Ctrl+E")
-		self.actionExportToFile = QtGui.QAction(MainWindow)
+		self.actionExportToFile = QtWidgets.QAction(MainWindow)
 		self.actionExportToFile.setObjectName(_fromUtf8("actionExportToFile"))
 		self.actionExportToFile.setShortcut("Ctrl+F")
-		self.actionNew = QtGui.QAction(MainWindow)
+		self.actionNew = QtWidgets.QAction(MainWindow)
 		self.actionNew.setObjectName(_fromUtf8("actionNew"))
 		self.actionNew.setShortcut("Ctrl+N")
-		self.actionOpen = QtGui.QAction(MainWindow)
+		self.actionOpen = QtWidgets.QAction(MainWindow)
 		self.actionOpen.setObjectName(_fromUtf8("actionOpen"))
 		self.actionOpen.setShortcut("Ctrl+O")
-		self.actionSave = QtGui.QAction(MainWindow)
+		self.actionSave = QtWidgets.QAction(MainWindow)
 		self.actionSave.setObjectName(_fromUtf8("actionSave"))
 		self.actionSave.setShortcut("Ctrl+S")
-		self.actionSaveAs = QtGui.QAction(MainWindow)
+		self.actionSaveAs = QtWidgets.QAction(MainWindow)
 		self.actionSaveAs.setObjectName(_fromUtf8("actionSaveAs"))
 		self.actionSaveAs.setShortcut("Ctrl+Shift+S")
-		self.actionToggleText = QtGui.QAction(MainWindow, checkable=True)
+		self.actionToggleText = QtWidgets.QAction(MainWindow, checkable=True)
 		self.actionToggleText.setChecked(True)
 		self.actionToggleText.setObjectName(_fromUtf8("actionToggleText"))
 
-		self.actionResetZoom = QtGui.QAction(MainWindow)
+		self.actionResetZoom = QtWidgets.QAction(MainWindow)
 		self.actionResetZoom.setObjectName(_fromUtf8("actionResetZoom"))
 
-		self.actionNewRoom = QtGui.QAction(MainWindow)
+		self.actionNewRoom = QtWidgets.QAction(MainWindow)
 		self.actionNewRoom.setObjectName(_fromUtf8("actionNewRoom"))
 		self.actionNewRoom.setShortcut("Ctrl+Shift+R")
-		self.actionNewExit= QtGui.QAction(MainWindow)
+		self.actionNewExit= QtWidgets.QAction(MainWindow)
 		self.actionNewExit.setObjectName(_fromUtf8("actionNewExit"))
 		self.actionNewExit.setShortcut("Ctrl+Shift+E")
-		self.actionNewLabel= QtGui.QAction(MainWindow)
+		self.actionNewLabel= QtWidgets.QAction(MainWindow)
 		self.actionNewLabel.setObjectName(_fromUtf8("actionNewLabel"))
 		self.actionNewLabel.setShortcut("Ctrl+Shift+L")
 

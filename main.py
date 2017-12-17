@@ -2,24 +2,25 @@
 
 
 import sys
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 from diggerUi import *
 from mush import *
+import diggerconf
 import platform
 import diggerconf
 
 try:
 	_encoding = QtGui.QApplication.UnicodeUTF8
 	def _translate(context, text, disambig):
-		return QtGui.QApplication.translate(context, text, disambig, _encoding)
+		return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
 	def _translate(context, text, disambig):
-		return QtGui.QApplication.translate(context, text, disambig)
+		return QtWidgets.QApplication.translate(context, text, disambig)
 
 
-class Main(QtGui.QMainWindow):
+class Main(QtWidgets.QMainWindow):
 	def __init__(self):
-		QtGui.QMainWindow.__init__(self, parent = None)
+		QtWidgets.QMainWindow.__init__(self, parent = None)
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi(self)
 		self.ui.actionExport.triggered.connect(self.exportDump)
@@ -36,10 +37,10 @@ class Main(QtGui.QMainWindow):
 		self.ui.actionNewExit.triggered.connect(self.openExit)
 		self.ui.actionNewLabel.triggered.connect(lambda: self.addLabel(self.ui.scene.width()/2, self.ui.scene.height()/2))
 
-		self.actionKeyCopy = QtGui.QAction(self)
+		self.actionKeyCopy = QtWidgets.QAction(self)
 		self.actionKeyCopy.setShortcut("Ctrl+C")
 		self.addAction(self.actionKeyCopy)
-		self.actionKeyPaste = QtGui.QAction(self)
+		self.actionKeyPaste = QtWidgets.QAction(self)
 		self.actionKeyPaste.setShortcut("Ctrl+V")
 		self.addAction(self.actionKeyPaste)
 
@@ -53,7 +54,7 @@ class Main(QtGui.QMainWindow):
 		self.ui.statusbar.addWidget(self.statusExit)
 		self.statusLabel = QLabel("")
 		self.ui.statusbar.addWidget(self.statusLabel)
-		self.isNewFile = 1
+		self.isNewFile = True
 		self.fileName = "Untitled"
 		self.bColor = diggerconf.mapColor
 		self.ui.scene.setBackgroundBrush(QColor(self.bColor))
@@ -108,7 +109,7 @@ class Main(QtGui.QMainWindow):
 
 
 	def openFile(self):
-		fname = QFileDialog.getOpenFileName(self, 'Open file', '/',"XML or Json Files (*.xml *.json)")
+		fname = QFileDialog.getOpenFileName(self, 'Open file', '/',"XML or Json Files (*.xml *.json)")[0]
 		if fname:
 			diggerconf.exportType = fname.split('.')[-1]
 			if diggerconf.exportType == 'xml':
@@ -117,20 +118,20 @@ class Main(QtGui.QMainWindow):
 				self.populateFromJson(fname)
 			self.fileName = fname
 			self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
-			self.isNewFile = 0
+			self.isNewFile = False
 
 
 	def saveFile(self):
 		fname = ""
-		if self.isNewFile == 1:
+		if self.isNewFile:
 			if diggerconf.exportType == 'xml':
-				fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "XML Files (*.xml)")
+				fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "XML Files (*.xml)")[0]
 			elif diggerconf.exportType == 'json':
-				fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "JSON Files (*.json)")
+				fname = QFileDialog.getSaveFileName(self, 'Save file', '/', "JSON Files (*.json)")[0]
 			if fname:
 				self.fileName = fname
 				self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
-				self.isNewFile = 0
+				self.isNewFile = False
 		else:
 			fname = self.fileName
 		if fname:
@@ -140,7 +141,7 @@ class Main(QtGui.QMainWindow):
 				saveToJson(fname, self, roomList, exitList, labelList)
 
 	def saveFileAs(self):
-		fname = QFileDialog.getSaveFileName(self, 'Save As', '/', "XML or JSON Files (*.xml *.json)")
+		fname = QFileDialog.getSaveFileName(self, 'Save As', '/', "XML or JSON Files (*.xml *.json)")[0]
 		if fname:
 			self.fileName = fname
 			extension = fname.split('.')[-1]
@@ -149,14 +150,14 @@ class Main(QtGui.QMainWindow):
 				saveToXml(fname, self, roomList, exitList, labelList)
 			if extension == 'json':
 				saveToJson(fname, self, roomList, exitList, labelList)
-			self.isNewFile = 0
+			self.isNewFile = False
 
 	def viewAbout(self):
 
 		text = """<b>Digger</b> v %s<p>Copyright &copy; 2017 Martin Tirado. All rights reserved. <p>
-				  This program can be used to design MUSH words through a graphical interface. <p>
-				  Python %s - Qt %s - PyQt %s on %s <p>
-				  Hosted on <a href='https://github.com/mtirado1/digger'> Github </a>"""
+				This program can be used to design MUSH words through a graphical interface. <p>
+				Python %s - Qt %s - PyQt %s on %s <p>
+				Hosted on <a href='https://github.com/mtirado1/digger'> Github </a>"""
 		QMessageBox.about(self, "About Digger", text % (diggerconf.version, platform.python_version(), QT_VERSION_STR, PYQT_VERSION_STR, platform.system()))
 
 	def setOptions(self):
@@ -182,7 +183,7 @@ class Main(QtGui.QMainWindow):
 		self.bColor = diggerconf.mapColor
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 		self.ui.scene.setBackgroundBrush(QColor(self.bColor))
-		self.isNewFile = 1
+		self.isNewFile = True
 		roomList.clear()
 		exitList.clear()
 		labelList.clear()
@@ -234,7 +235,7 @@ class Main(QtGui.QMainWindow):
 					coord_c = k.line.line().x2()
 					coord_d = k.line.line().y2()
 				k.line.setLine(coord_a, coord_b, coord_c, coord_d)
-				roomString += Qt.escape(k.name) + "<br />"
+				roomString += escape(k.name) + "<br />"
 			elif k.dest == id:
 				coord_c = roomList[id].x + roomList[id].center
 				coord_d = roomList[id].y + roomList[id].center
@@ -467,7 +468,7 @@ class Main(QtGui.QMainWindow):
 			labelList[objectClicked].box.setRect(0, 0, labelList[objectClicked].text.boundingRect().width(), labelList[objectClicked].text.boundingRect().height())
 
 if __name__ == "__main__":
-	app = QtGui.QApplication(sys.argv)
+	app = QtWidgets.QApplication(sys.argv)
 	diggerconf.loadConfigFile(len(sys.argv) > 2)
 	window = Main()
 	if len(sys.argv) > 2:

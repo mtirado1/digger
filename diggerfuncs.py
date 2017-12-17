@@ -1,8 +1,9 @@
 import os
 import sys
 from mush import *
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 import xml.dom.minidom
 from xml.dom.minidom import parse
 import json

@@ -1,7 +1,8 @@
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import json
 import diggerconf
+from cgi import escape
 
 def mushUnEscape(str):
 	retStr = ""
@@ -40,38 +41,38 @@ def saveToJson(fname, parent, rooms, exits, labels):
 		raise IOError(fsave.errorString())
 
 	stream = QTextStream(fsave)
-	stream.setCodec("UTF-8")
+	stream.setCodec('UTF-8')
 
 	jroomList = []
 	for i, room in rooms.items():
 		jroomList.append({
-		"id":i,
-		"x":room.x,
-		"y":room.y,
-		"bcolor":room.bColor,
-		"size":room.center,
-		"name":room.name,
-		"description":mushEscape(room.desc),
-		"code":room.code
+		'id':i,
+		'x':room.x,
+		'y':room.y,
+		'bcolor':room.bColor,
+		'size':room.center,
+		'name':room.name,
+		'description':mushEscape(room.desc),
+		'code':room.code
 		})
 
 	jexitList = []
 	for i, exit in exits.items():
 		jexitList.append({
-		"id":i,
-		"source":exit.source,
-		"destination":exit.dest,
-		"name":exit.name,
-		"description":mushEscape(exit.desc),
-		"alias":exit.alias
+		'id':i,
+		'source':exit.source,
+		'destination':exit.dest,
+		'name':exit.name,
+		'description':mushEscape(exit.desc),
+		'alias':exit.alias
 		})
 
 	jlabelList = []
 	for i, label in labels.items():
 		jlabelList.append({
-		"x":label.x,
-		"y":label.y,
-		"text":label.normalText
+		'x':label.x,
+		'y':label.y,
+		'text':label.normalText
 		})
 
 	jmap = {
@@ -95,24 +96,24 @@ def saveToXml(fname, parent, rooms, exits, labels):
 	stream << ("<map width='%d' height='%d' bcolor='%s'>\n" % (parent.ui.scene.width(), parent.ui.scene.height(), parent.bColor))
 	for i, room in rooms.items():
 		stream << ("\t<room id='%d' x='%d' y='%d' bcolor='%s' size='%d'>\n" % (i, room.x, room.y, room.bColor, room.center))
-		stream << "\t\t<name>" << Qt.escape(room.name) << "</name>\n"
+		stream << "\t\t<name>" << escape(room.name) << "</name>\n"
 		if room.desc != "":
-			stream << "\t\t<description>" << mushEscape(Qt.escape(room.desc)) << "</description>\n"
+			stream << "\t\t<description>" << mushEscape(escape(room.desc)) << "</description>\n"
 		if room.code:
 			for codeLine in room.code:
-				stream << "\t\t<code>" << Qt.escape(codeLine) << "</code>\n"
+				stream << "\t\t<code>" << escape(codeLine) << "</code>\n"
 		stream << "\t</room>\n"
 	for i, exit in exits.items():
 		stream << ("\t<exit id='%d' source='%d' destination='%d'>\n" % (i, exit.source, exit.dest))
-		stream << "\t\t<name>" << Qt.escape(exit.name) << "</name>\n"
+		stream << "\t\t<name>" << escape(exit.name) << "</name>\n"
 		if exit.desc != "":
-			stream <<"\t\t<description>" << mushEscape(Qt.escape(exit.desc)) << "</description>\n"
+			stream <<"\t\t<description>" << mushEscape(escape(exit.desc)) << "</description>\n"
 		if exit.alias != "":
-			stream << "\t\t<alias>" << Qt.escape(exit.alias) << "</alias>\n"
+			stream << "\t\t<alias>" << escape(exit.alias) << "</alias>\n"
 		stream << "\t</exit>\n"
 	for i, label in labels.items():
 		stream << ("\t<label x='%d' y='%d'>" % (label.x, label.y))
-		stream << Qt.escape(label.normalText)
+		stream << escape(label.normalText)
 		stream << "</label>\n"
 	stream << "</map>\n</DIGGER>"
 
