@@ -48,7 +48,8 @@ class mapView(QtWidgets.QGraphicsView):
 		self.zoomFactor = 1
 
 	def wheelEvent(self, event):
-		factor = -event.delta() // 120
+		delta = event.angleDelta()
+		factor = -(delta.x() + delta.y()) // 120
 		if factor == 1: # Zoom in
 			factor = 1.25
 			self.zoomFactor *= factor

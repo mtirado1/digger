@@ -109,7 +109,7 @@ class Main(QtWidgets.QMainWindow):
 
 
 	def openFile(self):
-		fname = QFileDialog.getOpenFileName(self, 'Open file', '/',"XML or Json Files (*.xml *.json)")[0]
+		fname = QFileDialog.getOpenFileName(self, 'Open file', '/','XML files (*.xml);;JSON files (*.json)')[0]
 		if fname:
 			diggerconf.exportType = fname.split('.')[-1]
 			if diggerconf.exportType == 'xml':
@@ -141,7 +141,7 @@ class Main(QtWidgets.QMainWindow):
 				saveToJson(fname, self, roomList, exitList, labelList)
 
 	def saveFileAs(self):
-		fname = QFileDialog.getSaveFileName(self, 'Save As', '/', "XML or JSON Files (*.xml *.json)")[0]
+		fname = QFileDialog.getSaveFileName(self, 'Save As', '/', 'XML files (*.xml);;JSON files (*.json)')[0]
 		if fname:
 			self.fileName = fname
 			extension = fname.split('.')[-1]
@@ -430,6 +430,10 @@ class Main(QtWidgets.QMainWindow):
 			exitList[index].source = editDialog.rDict[str(editDialog.combo1.currentText())]
 			exitList[index].dest = editDialog.rDict[str(editDialog.combo2.currentText())]
 			exitList[index].desc = editDialog.te1.toPlainText()
+
+			for i in verbList:
+				exitList[index].verbs[i] = editDialog.msgLineEdit[i].text()
+
 			items = []
 			for x in range(editDialog.list1.count()):
 				items.append(str(editDialog.list1.item(x).text()))
@@ -476,10 +480,12 @@ if __name__ == "__main__":
 			if not os.path.exists(sys.argv[2]):
 				print("Error: File not found.")
 				sys.exit()
-			fname = sys.argv[2]
-			if window.populateFromDOM(fname):
-				sys.exit()
-			window.fileName = fname
+			window.fileName = sys.argv[2]
+			if diggerconf.exportType == 'xml':
+				window.populateFromDOM(window.fileName)
+			elif diggerconf.exportType == 'json':
+				window.populateFromJson(window.fileName)
+
 			print(generateCode(window.fileName, roomList, exitList, labelList))
 	else:
 		window.show()

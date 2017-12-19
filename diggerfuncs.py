@@ -107,6 +107,7 @@ class Exit:
 		self.source = source
 		self.dest = -1
 		self.line = QGraphicsLineItem()
+		self.verbs = {}
 		if str(name) in diggerconf.aliasDict:
 			self.name = diggerconf.aliasDict[str(name)][0]
 			for x in range(len(diggerconf.aliasDict[str(name)])):
@@ -134,7 +135,7 @@ class Label:
 
 
 def exportCodeToFile(title):
-	fname = QFileDialog.getSaveFileName(None, 'Export to File', '/', "")
+	fname = QFileDialog.getSaveFileName(None, 'Export to File', '/', "")[0]
 	fsave = QFile(fname)
 	if not fsave.open(QIODevice.WriteOnly):
 		raise IOError(unicode(fsave.errorString()))
@@ -165,10 +166,11 @@ def importJson(self, fname):
 			retMap.rooms[id].code = r["code"]
 		for e in exits:
 			id = e["id"]
-			retMap.exits[id] = Exit(e["name"], e["source"])
-			retMap.exits[id].dest = e["destination"]
-			retMap.exits[id].desc = e["description"]
-			retMap.exits[id].alias = e["alias"]
+			retMap.exits[id] = Exit(e['name'], e['source'])
+			retMap.exits[id].dest = e['destination']
+			retMap.exits[id].desc = e['description']
+			retMap.exits[id].alias = e['alias']
+			retmap.exits[id].verbs = e['verbs']
 		for l in labels:
 			id = findNewId(retMap.labels)
 			retMap.labels[id] = Label(l["text"], l["x"], l["y"])
@@ -222,14 +224,24 @@ def importXml(self, fname):
 		load_exit_alias = []
 		load_exit_name = getText(element.getElementsByTagName("name")[0])
 		load_exit_desc = ""
+		load_exit_msg = {}
 		if element.getElementsByTagName("description"):
 			load_exit_desc = getText(element.getElementsByTagName("description")[0])
 		for i in element.getElementsByTagName("alias"):
 			load_exit_alias.append(getText(i))
+
+		msgElement = element.getElementsByTagName('verbs')
+		if msgElement:
+			for i in verbList:
+				if msgElement[0].getElementsByTagName(i):
+					message = getText(msgElement[0].getElementsByTagName(i)[0])
+					load_exit_msg[i] = message
+
 		retMap.exits[id] = Exit(load_exit_name, load_exit_source)
 		retMap.exits[id].alias = ";".join(load_exit_alias)
 		retMap.exits[id].dest = load_exit_dest
 		retMap.exits[id].desc = mushUnEscape(load_exit_desc)
+		retMap.exits[id].verbs = load_exit_msg
 
 	for element in labels:
 		id = findNewId(retMap.labels)
@@ -445,12 +457,14 @@ class editExit(QDialog):
 		self.tabNames = QWidget()
 		self.tabAlias = QWidget()
 		self.tabDesc = QWidget()
-		self.btn1 = QPushButton("Ok")
+		self.tabMsg = QWidget()
+		self.btn1 = QPushButton('Ok')
 		self.btn1.clicked.connect(self.accept)
 		self.tab = QTabWidget()
-		self.tab.addTab(self.tabNames, "Name")
-		self.tab.addTab(self.tabDesc, "Description")
-		self.tab.addTab(self.tabAlias, "Alias")
+		self.tab.addTab(self.tabNames, 'Name')
+		self.tab.addTab(self.tabDesc, 'Description')
+		self.tab.addTab(self.tabAlias, 'Alias')
+		self.tab.addTab(self.tabMsg, 'Verbs')
 
 		tabLayout = QFormLayout()
 		tabLayout.addRow(self.tab)
@@ -483,6 +497,17 @@ class editExit(QDialog):
 		layout3.addRow(self.te1)
 		self.tabDesc.setLayout(layout3)
 
+		layout4 = QFormLayout()
+
+		self.msgLabel = {}
+		self.msgLineEdit = {}
+		for i in verbList:
+			self.msgLabel[i] = QLabel('@' + i)
+			self.msgLineEdit[i] = QLineEdit()
+			layout4.addRow(self.msgLabel[i], self.msgLineEdit[i])
+
+		self.tabMsg.setLayout(layout4)
+
 		self.btn1.clicked.connect(self.accept)
 
 		if diggerconf.monospaceEdit:
@@ -506,6 +531,8 @@ class editExit(QDialog):
 		if len(exitList[exit].alias) > 0: # The exit does have an alias
 			for x in exitList[exit].alias.split(";"):
 				self.list1.addItem(x)
+		for key, value in exitList[exit].verbs.items():
+			self.msgLineEdit[key].setText(value)
 
 class addLabel(QDialog):
 	def __init__(self, parent = None):

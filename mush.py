@@ -4,6 +4,10 @@ import json
 import diggerconf
 from cgi import escape
 
+# MUSH-related functions and variables
+
+verbList = ['success', 'osuccess', 'asuccess', 'failure', 'ofailure', 'afailure']
+
 def mushUnEscape(str):
 	retStr = ""
 	x = 0
@@ -64,7 +68,8 @@ def saveToJson(fname, parent, rooms, exits, labels):
 		'destination':exit.dest,
 		'name':exit.name,
 		'description':mushEscape(exit.desc),
-		'alias':exit.alias
+		'alias':exit.alias,
+		'verbs':exit.verbs
 		})
 
 	jlabelList = []
@@ -110,6 +115,11 @@ def saveToXml(fname, parent, rooms, exits, labels):
 			stream <<"\t\t<description>" << mushEscape(escape(exit.desc)) << "</description>\n"
 		if exit.alias != "":
 			stream << "\t\t<alias>" << escape(exit.alias) << "</alias>\n"
+		stream << '\t\t<verbs>\n'
+		for key, val, in exit.verbs.items():
+			if val:
+				stream << '\t\t\t<%s>%s</%s>\n' % (key, val, key)
+		stream << '\t\t</verbs>\n'
 		stream << "\t</exit>\n"
 	for i, label in labels.items():
 		stream << ("\t<label x='%d' y='%d'>" % (label.x, label.y))
@@ -148,6 +158,8 @@ def generateCode(title, rooms, exits, labels):
 				strExport += "@open " + j.name + aliasString + "\n"
 			if j.desc != "":
 				strExport += "@desc " + j.name + "=" + mushEscape(str(j.desc)) + "\n"
+			for verb, value in j.verbs.items():
+				strExport += '@%s %s=%s\n' % (verb, j.name, value)
 		if isCode(room.code):
 			if diggerconf.enableImports:
 				for codeLine in room.code:
