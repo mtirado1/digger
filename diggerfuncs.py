@@ -297,9 +297,9 @@ class optionsClass(QDialog):
 		self.btnBColor.clicked.connect(self.selectBackgroundColor)
 
 	def selectRoomColor(self):
-		self.rColor = QColorDialog.getColor()
+		self.rColor = QColorDialog.getColor(initial = self.rColor)
 	def selectBackgroundColor(self):
-		self.bColor = QColorDialog.getColor()
+		self.bColor = QColorDialog.getColor(initial = self.bColor)
 
 	def setData(self):
 		self.sp.setValue(int(self.parent().ui.scene.width()))
@@ -381,11 +381,12 @@ class editRoom(QDialog):
 			self.te2.setFontFamily("Monospace")
 
 	def openColorDialog(self):
-		self.color = QColorDialog.getColor()
+		self.color = QColorDialog.getColor(initial = self.color)
 
 
 
 	def setData(self, room):
+		self.color = QColor(roomList[room].bColor)
 		self.le.setText(roomList[room].name)
 		self.te.setPlainText(roomList[room].desc)
 		self.te2.setPlainText(str("\n".join(roomList[room].code))) # Join lines of mushcode
