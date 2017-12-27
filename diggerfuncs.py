@@ -41,7 +41,7 @@ class labelBox(QGraphicsRectItem):
 	def mouseReleaseEvent(self, event):
 		if self.moved == 1:
 			QGraphicsRectItem.mouseReleaseEvent(self, event)
-			self.scene().parent().parent().drawLabel(self.index)
+			self.scene().parent().parent().parent().drawLabel(self.index)
 		self.moved = 0
 
 	def mouseMoveEvent(self, event):
@@ -64,7 +64,7 @@ class roomBox(QGraphicsRectItem):
 	def mouseReleaseEvent(self, event):
 		if self.moved == 1:
 			QGraphicsRectItem.mouseReleaseEvent(self, event)
-			self.scene().parent().parent().drawRoom(self.index)
+			self.scene().parent().parent().parent().drawRoom(self.index)
 		self.moved = 0
 
 	def mouseMoveEvent(self, event):
@@ -302,10 +302,10 @@ class optionsClass(QDialog):
 		self.bColor = QColorDialog.getColor(initial = self.bColor)
 
 	def setData(self):
-		self.sp.setValue(int(self.parent().ui.scene.width()))
-		self.sp2.setValue(int(self.parent().ui.scene.height()))
-		self.rColor = QColor(self.parent().roomBColor)
-		self.bColor = QColor(self.parent().bColor)
+		self.sp.setValue(int(self.parent().parent().scene.width()))
+		self.sp2.setValue(int(self.parent().parent().scene.height()))
+		self.rColor = QColor(self.parent().parent().roomBColor)
+		self.bColor = QColor(self.parent().parent().bColor)
 
 
 class newRoom(QDialog):

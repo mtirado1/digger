@@ -1,5 +1,5 @@
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from diggerfuncs import *
 import diggerconf
 
@@ -56,7 +56,7 @@ class mapView(QtWidgets.QGraphicsView):
 			self.scale(factor, factor)
 		elif factor == -1: # Zoom out
 			factor = 0.8
-			if self.parent().ui.scene.width()*self.zoomFactor != self.width() and self.parent().ui.scene.width()*self.zoomFactor*factor >= self.width():
+			if self.scene().width()*self.zoomFactor != self.width() and self.scene().width()*self.zoomFactor*factor >= self.width():
 				self.zoomFactor *= factor
 				self.scale(factor, factor)
 
@@ -98,11 +98,11 @@ class mapView(QtWidgets.QGraphicsView):
 			for i, room in roomList.items():
 				if self.cursorInRoom(scenePos, room):
 					check = 1
-					self.parent().openExitName(self.source, i)
-					self.parent().ui.scene.removeItem(self.tempLine)
+					self.parent().parent().openExitName(self.source, i)
+					self.scene().removeItem(self.tempLine)
 					break
 			if check == 0:
-				self.parent().ui.scene.removeItem(self.tempLine)
+				self.scene().removeItem(self.tempLine)
 			self.joinExit = 0
 		elif self.joinExit == 2: # Chain exit
 			check = 0
@@ -111,7 +111,7 @@ class mapView(QtWidgets.QGraphicsView):
 					check = 1
 					self.chainRoom.append(i)
 					self.chainLine.append(QGraphicsLineItem())
-					self.parent().ui.scene.addItem(self.chainLine[-1])
+					self.scene().addItem(self.chainLine[-1])
 					val_x = roomList[self.chainRoom[-2]].x + roomList[self.chainRoom[-2]].center
 					val_y = roomList[self.chainRoom[-2]].y + roomList[self.chainRoom[-2]].center
 					last_x = roomList[self.chainRoom[-1]].x + roomList[self.chainRoom[-1]].center
@@ -120,11 +120,11 @@ class mapView(QtWidgets.QGraphicsView):
 					self.chainLine[-1].setLine(val_x, val_y, last_x, last_y)
 					break
 			if check == 0:
-				self.parent().ui.scene.removeItem(self.tempLine)
-				self.parent().openExitChain()
+				self.scene().removeItem(self.tempLine)
+				self.parent().parent().openExitChain()
 				del self.chainRoom[:]
 				for x in self.chainLine:
-					self.parent().ui.scene.removeItem(x)
+					self.scene().removeItem(x)
 				del self.chainLine[:]
 				self.joinExit = 0
 
@@ -151,7 +151,7 @@ class mapView(QtWidgets.QGraphicsView):
 		check = 0
 		objectClicked = 0
 
-		if scenePos.x() > self.parent().ui.scene.width() or scenePos.y() > self.parent().ui.scene.height(): # Cursor outside of scene
+		if scenePos.x() > self.scene().width() or scenePos.y() > self.scene().height(): # Cursor outside of scene
 			return
 
 		for i, room in roomList.items():
@@ -171,10 +171,12 @@ class mapView(QtWidgets.QGraphicsView):
 			actionAddExit = menu.addAction("Add Exit")
 			actionAddExitChain = menu.addAction("Add Exit Chain")
 			exitMenu = menu.addMenu("Exits")
-			actionDeleteRoom = menu.addAction("Delete Room")
+			actionDeleteRoom = menu.addAction('Delete Room')
+			actionDeleteRoom.setIcon(QIcon.fromTheme('edit-delete'))
 			menu.addSeparator()
-			actionCopy = menu.addAction("Copy")
-			actionCopy.setShortcut("Ctrl+C")
+			actionCopy = menu.addAction('Copy')
+			actionCopy.setShortcut('Ctrl+C')
+			actionCopy.setIcon(QIcon.fromTheme('edit-copy'))
 			actionExitList = {}
 			menuEnabled = False
 			for f in exitList:
@@ -184,26 +186,26 @@ class mapView(QtWidgets.QGraphicsView):
 			exitMenu.setEnabled(menuEnabled)
 			action = menu.exec_(event.globalPos())
 			if action == actionEditRoom: # Edit a room
-				self.parent().editRoomProperties(objectClicked)
+				self.parent().parent().editRoomProperties(objectClicked)
 			elif action == actionAddExit: # Add new exit
 				self.joinExit = 1
 				self.source = objectClicked
-				self.parent().ui.scene.addItem(self.tempLine)
+				self.scene().addItem(self.tempLine)
 			elif action == actionAddExitChain:
 				self.joinExit = 2 # Chain exits
 				del self.chainLine[:]
 				del self.chainRoom[:]
 				self.chainRoom.append(objectClicked)
-				self.parent().ui.scene.addItem(self.tempLine)
+				self.scene().addItem(self.tempLine)
 
 			elif action == actionDeleteRoom: # Delete a room
-				self.parent().deleteRoom(objectClicked)
+				self.parent().parent().deleteRoom(objectClicked)
 			elif action == actionCopy: # Copy this Room
-				self.parent().copyRoom(objectClicked)
+				self.parent().parent().copyRoom(objectClicked)
 			else:
 				for k in actionExitList:
 					if action == actionExitList[k]:
-						self.parent().editExitProperties(k)
+						self.parent().parent().editExitProperties(k)
 						break
 		#User clicked on a label
 		elif check == 2:
@@ -212,9 +214,9 @@ class mapView(QtWidgets.QGraphicsView):
 			actionDeleteLabel = menu.addAction("Delete Label")
 			action = menu.exec_(event.globalPos())
 			if action == actionEditLabel:
-				self.parent().editLabelProperties(objectClicked)
+				self.parent().parent().editLabelProperties(objectClicked)
 			elif action == actionDeleteLabel:
-				self.parent().deleteLabel(objectClicked)
+				self.parent().parent().deleteLabel(objectClicked)
 		#Map Actions, user clicked on scene
 		elif check == 0:
 			menu = QMenu()
@@ -224,124 +226,17 @@ class mapView(QtWidgets.QGraphicsView):
 			menu.addSeparator()
 			actionPaste = menu.addAction("Paste")
 			actionPaste.setShortcut("Ctrl+V")
+			actionPaste.setIcon(QIcon.fromTheme('edit-paste'))
 			action = menu.exec_(event.globalPos())
 			if action == actionNewRoom:
-				self.parent().digRoom(scenePos.x(), scenePos.y())
+				self.parent().parent().digRoom(scenePos.x(), scenePos.y())
 			elif action == actionNewExit:
-				self.parent().openExit()
+				self.parent().parent().openExit()
 			elif action == actionAddLabel:
-				self.parent().addLabel(scenePos.x(), scenePos.y())
+				self.parent().parent().addLabel(scenePos.x(), scenePos.y())
 			elif action == actionPaste:
-				self.parent().pasteRoom(scenePos.x(), scenePos.y())
+				self.parent().parent().pasteRoom(scenePos.x(), scenePos.y())
 
 class Ui_MainWindow(object):
 	def setupUi(self, MainWindow):
-		MainWindow.setObjectName(_fromUtf8("MainWindow"))
-		MainWindow.resize(1080, 683)
-		self.graphicsView = mapView(MainWindow)
-		self.graphicsView.setObjectName(_fromUtf8("graphicsView"))
-		MainWindow.setCentralWidget(self.graphicsView)
-		self.menubar = QtWidgets.QMenuBar(MainWindow)
-		self.menubar.setGeometry(QtCore.QRect(0, 0, 1080, 25))
-		self.menubar.setObjectName(_fromUtf8("menubar"))
-		self.menuFile = QtWidgets.QMenu(self.menubar)
-		self.menuFile.setObjectName(_fromUtf8("menuFile"))
-		self.menuEdit = QtWidgets.QMenu(self.menubar)
-		self.menuEdit.setObjectName(_fromUtf8("menuEdit"))
-		self.menuView = QtWidgets.QMenu(self.menubar)
-		self.menuView.setObjectName(_fromUtf8("menuView"))
-		self.actionOptions = QtWidgets.QAction(self.menubar)
-		self.actionOptions.setObjectName(_fromUtf8("actionOptions"))
-		self.actionAbout = QtWidgets.QAction(self.menubar)
-		self.actionAbout.setObjectName(_fromUtf8("actionAbout"))
-		MainWindow.setMenuBar(self.menubar)
-		self.statusbar = QtWidgets.QStatusBar(MainWindow)
-		self.statusbar.setObjectName(_fromUtf8("statusbar"))
-		MainWindow.setStatusBar(self.statusbar)
-
-		self.actionExport = QtWidgets.QAction(MainWindow)
-		self.actionExport.setObjectName(_fromUtf8("actionExport"))
-		self.actionExport.setShortcut("Ctrl+E")
-		self.actionExportToFile = QtWidgets.QAction(MainWindow)
-		self.actionExportToFile.setObjectName(_fromUtf8("actionExportToFile"))
-		self.actionExportToFile.setShortcut("Ctrl+F")
-		self.actionNew = QtWidgets.QAction(MainWindow)
-		self.actionNew.setObjectName(_fromUtf8("actionNew"))
-		self.actionNew.setShortcut("Ctrl+N")
-		self.actionOpen = QtWidgets.QAction(MainWindow)
-		self.actionOpen.setObjectName(_fromUtf8("actionOpen"))
-		self.actionOpen.setShortcut("Ctrl+O")
-		self.actionSave = QtWidgets.QAction(MainWindow)
-		self.actionSave.setObjectName(_fromUtf8("actionSave"))
-		self.actionSave.setShortcut("Ctrl+S")
-		self.actionSaveAs = QtWidgets.QAction(MainWindow)
-		self.actionSaveAs.setObjectName(_fromUtf8("actionSaveAs"))
-		self.actionSaveAs.setShortcut("Ctrl+Shift+S")
-		self.actionToggleText = QtWidgets.QAction(MainWindow, checkable=True)
-		self.actionToggleText.setChecked(True)
-		self.actionToggleText.setObjectName(_fromUtf8("actionToggleText"))
-
-		self.actionResetZoom = QtWidgets.QAction(MainWindow)
-		self.actionResetZoom.setObjectName(_fromUtf8("actionResetZoom"))
-
-		self.actionNewRoom = QtWidgets.QAction(MainWindow)
-		self.actionNewRoom.setObjectName(_fromUtf8("actionNewRoom"))
-		self.actionNewRoom.setShortcut("Ctrl+Shift+R")
-		self.actionNewExit= QtWidgets.QAction(MainWindow)
-		self.actionNewExit.setObjectName(_fromUtf8("actionNewExit"))
-		self.actionNewExit.setShortcut("Ctrl+Shift+E")
-		self.actionNewLabel= QtWidgets.QAction(MainWindow)
-		self.actionNewLabel.setObjectName(_fromUtf8("actionNewLabel"))
-		self.actionNewLabel.setShortcut("Ctrl+Shift+L")
-
-		self.menuFile.addAction(self.actionNew)
-		self.menuFile.addAction(self.actionOpen)
-		self.menuFile.addSeparator()
-		self.menuFile.addAction(self.actionSave)
-		self.menuFile.addAction(self.actionSaveAs)
-		self.menuFile.addSeparator()
-		self.menuFile.addAction(self.actionExport)
-		self.menuFile.addAction(self.actionExportToFile)
-
-
-		self.menuEdit.addAction(self.actionNewRoom)
-		self.menuEdit.addAction(self.actionNewExit)
-		self.menuEdit.addAction(self.actionNewLabel)
-
-		self.menuView.addAction(self.actionToggleText)
-		self.menuView.addAction(self.actionResetZoom)
-
-		self.menubar.addAction(self.menuFile.menuAction())
-		self.menubar.addAction(self.menuEdit.menuAction())
-		self.menubar.addAction(self.menuView.menuAction())
-		self.menubar.addAction(self.actionOptions)
-		self.menubar.addAction(self.actionAbout)
-		self.retranslateUi(MainWindow)
-		QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-		# Prepare scene
-		self.scene = QGraphicsScene(self.graphicsView)
-		self.scene.setSceneRect(0 , 0, diggerconf.mapWidth, diggerconf.mapHeight)
-		self.graphicsView.setScene(self.scene)
-		self.graphicsView.setAlignment(Qt.AlignLeft|Qt.AlignTop)
-
-	def retranslateUi(self, MainWindow):
-		MainWindow.setWindowTitle(_translate("MainWindow", "Digger", None))
-		self.menuFile.setTitle(_translate("MainWindow", "File", None))
-		self.menuEdit.setTitle(_translate("MainWindow", "Edit", None))
-		self.menuView.setTitle(_translate("MainWindow", "View", None))
-		self.actionOptions.setText(_translate("MainWindow", "Options", None))
-		self.actionAbout.setText(_translate("MainWindow", "About", None))
-
-		self.actionNewRoom.setText(_translate("MainWindow", "Add &Room", None))
-		self.actionNewExit.setText(_translate("MainWindow", "Add &Exit", None))
-		self.actionNewLabel.setText(_translate("MainWindow", "Add &Label", None))
-
-		self.actionExportToFile.setText(_translate("MainWindow", "Export to &File", None))
-		self.actionExport.setText(_translate("MainWindow", "&Export", None))
-		self.actionNew.setText(_translate("MainWindow", "&New", None))
-		self.actionOpen.setText(_translate("MainWindow", "&Open", None))
-		self.actionSave.setText(_translate("MainWindow", "&Save", None))
-		self.actionSaveAs.setText(_translate("MainWindow", "Save As", None))
-		self.actionToggleText.setText(_translate("MainWindow", "Show details", None))
-		self.actionResetZoom.setText(_translate("MainWindow", "Reset Zoom", None))
+		uic.loadUi('digger.ui', self)

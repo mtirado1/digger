@@ -2,9 +2,9 @@
 
 
 import sys
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, uic
 from diggerUi import *
-from mush import *
+import mush
 import diggerconf
 import platform
 import diggerconf
@@ -21,21 +21,16 @@ except AttributeError:
 class Main(QtWidgets.QMainWindow):
 	def __init__(self):
 		QtWidgets.QMainWindow.__init__(self, parent = None)
-		self.ui = Ui_MainWindow()
-		self.ui.setupUi(self)
-		self.ui.actionExport.triggered.connect(self.exportDump)
-		self.ui.actionExportToFile.triggered.connect(lambda: exportCodeToFile(self.fileName))
-		self.ui.actionNew.triggered.connect(self.newFile)
-		self.ui.actionOptions.triggered.connect(self.setOptions)
-		self.ui.actionAbout.triggered.connect(self.viewAbout)
-		self.ui.actionOpen.triggered.connect(self.openFile)
-		self.ui.actionSave.triggered.connect(self.saveFile)
-		self.ui.actionToggleText.triggered.connect(self.toggleText)
-		self.ui.actionResetZoom.triggered.connect(self.ui.graphicsView.resetZoom)
-		self.ui.actionSaveAs.triggered.connect(self.saveFileAs)
-		self.ui.actionNewRoom.triggered.connect(lambda: self.digRoom(self.ui.scene.width()/2, self.ui.scene.height()/2))
-		self.ui.actionNewExit.triggered.connect(self.openExit)
-		self.ui.actionNewLabel.triggered.connect(lambda: self.addLabel(self.ui.scene.width()/2, self.ui.scene.height()/2))
+		uic.loadUi('digger.ui', self)
+
+		self.resize(1080, 683)
+		self.scene = QGraphicsScene(self.graphicsView)
+		self.scene.setSceneRect(0, 0, diggerconf.mapWidth, diggerconf.mapHeight)
+		self.graphicsView.setScene(self.scene)
+
+		self.actionExportToFile.triggered.connect(lambda: exportCodeToFile(self.fileName))
+		self.actionNewRoom.triggered.connect(lambda: self.digRoom(self.scene.width()/2, self.scene.height()/2))
+		self.actionNewLabel.triggered.connect(lambda: self.addLabel(self.scene.width()/2, self.scene.height()/2))
 
 		self.actionKeyCopy = QtWidgets.QAction(self)
 		self.actionKeyCopy.setShortcut("Ctrl+C")
@@ -43,21 +38,19 @@ class Main(QtWidgets.QMainWindow):
 		self.actionKeyPaste = QtWidgets.QAction(self)
 		self.actionKeyPaste.setShortcut("Ctrl+V")
 		self.addAction(self.actionKeyPaste)
-
-
-		self.actionKeyPaste.triggered.connect(lambda: self.pasteRoom(self.ui.graphicsView.posX, self.ui.graphicsView.posY))
-		self.actionKeyCopy.triggered.connect(lambda: self.copyRoom(self.ui.graphicsView.selectedRoom))
+		self.actionKeyPaste.triggered.connect(lambda: self.pasteRoom(self.graphicsView.posX, self.graphicsView.posY))
+		self.actionKeyCopy.triggered.connect(lambda: self.copyRoom(self.graphicsView.selectedRoom))
 
 		self.statusRoom = QLabel("")
-		self.ui.statusbar.addWidget(self.statusRoom)
+		self.statusbar.addWidget(self.statusRoom)
 		self.statusExit = QLabel("")
-		self.ui.statusbar.addWidget(self.statusExit)
+		self.statusbar.addWidget(self.statusExit)
 		self.statusLabel = QLabel("")
-		self.ui.statusbar.addWidget(self.statusLabel)
+		self.statusbar.addWidget(self.statusLabel)
 		self.isNewFile = True
 		self.fileName = "Untitled"
 		self.bColor = diggerconf.mapColor
-		self.ui.scene.setBackgroundBrush(QColor(self.bColor))
+		self.scene.setBackgroundBrush(QColor(self.bColor))
 		self.roomBColor = diggerconf.roomColor
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 
@@ -70,22 +63,22 @@ class Main(QtWidgets.QMainWindow):
 
 	def loadMap(self, Map):
 		self.bColor = Map.bcolor
-		self.ui.scene.setBackgroundBrush(QColor(Map.bcolor))
-		self.ui.scene.setSceneRect(0, 0, Map.width, Map.height)
+		self.scene.setBackgroundBrush(QColor(Map.bcolor))
+		self.scene.setSceneRect(0, 0, Map.width, Map.height)
 		for i in Map.rooms: # Load all rooms to scene
 			roomList[i] = Map.rooms[i]
-			self.ui.scene.addItem(roomList[i].box)
+			self.scene.addItem(roomList[i].box)
 			roomList[i].box.move_restrict_rect = QRectF(0, 0, Map.width, Map.height)
-			self.ui.scene.addItem(roomList[i].text)
+			self.scene.addItem(roomList[i].text)
 
 		for i in Map.exits: # Load exits
 			exitList[i] = Map.exits[i]
-			self.ui.scene.addItem(exitList[i].line)
+			self.scene.addItem(exitList[i].line)
 
 		for i in Map.labels: # Finally, load labels
 			labelList[i] = Map.labels[i]
-			self.ui.scene.addItem(labelList[i].text)
-			self.ui.scene.addItem(labelList[i].box)
+			self.scene.addItem(labelList[i].text)
+			self.scene.addItem(labelList[i].box)
 			labelList[i].box.move_restrict_rect = QRectF(0, 0, Map.width, Map.height)
 		self.drawAll()
 
@@ -93,7 +86,7 @@ class Main(QtWidgets.QMainWindow):
 		roomList.clear()
 		exitList.clear()
 		labelList.clear()
-		self.ui.scene.clear()
+		self.scene.clear()
 
 		fmap = importXml(self, fname)
 		self.loadMap(fmap) # Load map
@@ -102,7 +95,7 @@ class Main(QtWidgets.QMainWindow):
 		roomList.clear()
 		exitList.clear()
 		labelList.clear()
-		self.ui.scene.clear()
+		self.scene.clear()
 
 		fmap = importJson(self, fname)
 		self.loadMap(fmap) # Load map
@@ -136,9 +129,9 @@ class Main(QtWidgets.QMainWindow):
 			fname = self.fileName
 		if fname:
 			if diggerconf.exportType == 'xml':
-				saveToXml(fname, self, roomList, exitList, labelList)
+				mush.saveToXml(fname, self, roomList, exitList, labelList)
 			elif diggerconf.exportType == 'json':
-				saveToJson(fname, self, roomList, exitList, labelList)
+				mush.saveToJson(fname, self, roomList, exitList, labelList)
 
 	def saveFileAs(self):
 		fname = QFileDialog.getSaveFileName(self, 'Save As', '/', 'XML files (*.xml);;JSON files (*.json)')[0]
@@ -147,9 +140,9 @@ class Main(QtWidgets.QMainWindow):
 			extension = fname.split('.')[-1]
 			self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
 			if extension == 'xml':
-				saveToXml(fname, self, roomList, exitList, labelList)
+				mush.saveToXml(fname, self, roomList, exitList, labelList)
 			if extension == 'json':
-				saveToJson(fname, self, roomList, exitList, labelList)
+				mush.saveToJson(fname, self, roomList, exitList, labelList)
 			self.isNewFile = False
 
 	def viewAbout(self):
@@ -165,13 +158,13 @@ class Main(QtWidgets.QMainWindow):
 		optionsDialog.setData()
 		if optionsDialog.exec_():
 			self.bColor = optionsDialog.bColor.name()
-			self.ui.scene.setBackgroundBrush(optionsDialog.bColor)
+			self.scene.setBackgroundBrush(optionsDialog.bColor)
 			self.roomBColor = optionsDialog.rColor.name()
-			self.ui.scene.setSceneRect(QRectF(0, 0, optionsDialog.sp.value(), optionsDialog.sp2.value()))
+			self.scene.setSceneRect(QRectF(0, 0, optionsDialog.sp.value(), optionsDialog.sp2.value()))
 			for x, room in roomList.items():
-				room.box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
+				room.box.move_restrict_rect = QRectF(0, 0, self.scene.width(), self.scene.height())
 			for x, label in labelList.items():
-				label.box.move_restric_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
+				label.box.move_restric_rect = QRectF(0, 0, self.scene.width(), self.scene.height())
 
 	def exportDump(self):
 		exportWindow = exportClass(self)
@@ -182,12 +175,12 @@ class Main(QtWidgets.QMainWindow):
 		self.fileName = "Untitled"
 		self.bColor = diggerconf.mapColor
 		self.setWindowTitle(_translate("MainWindow", self.fileName + " - Digger", None))
-		self.ui.scene.setBackgroundBrush(QColor(self.bColor))
+		self.scene.setBackgroundBrush(QColor(self.bColor))
 		self.isNewFile = True
 		roomList.clear()
 		exitList.clear()
 		labelList.clear()
-		self.ui.scene.clear()
+		self.scene.clear()
 
 	def updateStatusRoom(self):
 		if len(roomList) > 0:
@@ -242,7 +235,7 @@ class Main(QtWidgets.QMainWindow):
 				coord_a = k.line.line().x1()
 				coord_b = k.line.line().y1()
 				k.line.setLine(coord_a, coord_b, coord_c, coord_d)
-		if self.ui.actionToggleText.isChecked():
+		if self.actionToggleText.isChecked():
 			roomList[id].text.setHtml(roomString + "</p>")
 		else:
 			roomList[id].text.setHtml("")
@@ -285,11 +278,11 @@ class Main(QtWidgets.QMainWindow):
 			roomList[id_].x = x_
 			roomList[id_].y = y_
 			roomList[id_].bColor = self.roomBColor
-			roomList[id_].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
+			roomList[id_].box.move_restrict_rect = QRectF(0, 0, self.scene.width(), self.scene.height())
 			for codeLine in diggerconf.roomCode:
 				roomList[id_].code.append(str(codeLine))
-			self.ui.scene.addItem(roomList[id_].box)
-			self.ui.scene.addItem(roomList[id_].text)
+			self.scene.addItem(roomList[id_].box)
+			self.scene.addItem(roomList[id_].text)
 			self.drawRoom(id_)
 			self.updateStatusRoom()
 
@@ -308,23 +301,23 @@ class Main(QtWidgets.QMainWindow):
 		roomList[id].x = x_
 		roomList[id].y = y_
 		roomList[id].bColor = room.bColor
-		roomList[id].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
+		roomList[id].box.move_restrict_rect = QRectF(0, 0, self.scene.width(), self.scene.height())
 		roomList[id].code = list(room.code)
-		self.ui.scene.addItem(roomList[id].box)
-		self.ui.scene.addItem(roomList[id].text)
+		self.scene.addItem(roomList[id].box)
+		self.scene.addItem(roomList[id].text)
 		self.drawRoom(id)
 		self.updateStatusRoom()
 
 
 	def deleteRoom(self, index):
-		self.ui.scene.removeItem(roomList[index].box)
-		self.ui.scene.removeItem(roomList[index].text)
+		self.scene.removeItem(roomList[index].box)
+		self.scene.removeItem(roomList[index].text)
 		deleted = True
 		while deleted:
 			for x in exitList: # First round, delete all sources
 				deleted = False
 				if exitList[x].source == index:
-					self.ui.scene.removeItem(exitList[x].line)
+					self.scene.removeItem(exitList[x].line)
 					del exitList[x]
 					deleted = True
 					break
@@ -356,7 +349,7 @@ class Main(QtWidgets.QMainWindow):
 					items.append(exitDialog.list1.item(x).text())
 				exitList[id_].alias = ";".join(items)
 
-			self.ui.scene.addItem(exitList[id_].line)
+			self.scene.addItem(exitList[id_].line)
 			self.drawExit(id_)
 			self.drawRoom(exitList[id_].source)
 			self.drawRoom(exitList[id_].dest)
@@ -369,13 +362,13 @@ class Main(QtWidgets.QMainWindow):
 			exitList[id_] = Exit(exitDialog.le.text(), source)
 			exitList[id_].dest = destination
 			self.drawExit(id_)
-			self.ui.scene.addItem(exitList[id_].line)
+			self.scene.addItem(exitList[id_].line)
 			if exitDialog.checkBox.isChecked():
 				id = findNewId(exitList)
 				exitList[id] = Exit(exitDialog.le2.text(), destination)
 				exitList[id].dest = source
 				self.drawExit(id)
-				self.ui.scene.addItem(exitList[id].line)
+				self.scene.addItem(exitList[id].line)
 		self.drawRoom(source)
 		self.drawRoom(destination)
 		self.updateStatusExit()
@@ -383,22 +376,22 @@ class Main(QtWidgets.QMainWindow):
 	def openExitChain(self):
 		exitDialog = newExitName()
 		if exitDialog.exec_():
-			for x in range(len(self.ui.graphicsView.chainRoom) - 1): # Skip the last room
-				source = self.ui.graphicsView.chainRoom[x]
-				destination = self.ui.graphicsView.chainRoom[x+1]
+			for x in range(len(self.graphicsView.chainRoom) - 1): # Skip the last room
+				source = self.graphicsView.chainRoom[x]
+				destination = self.graphicsView.chainRoom[x+1]
 				id = findNewId(exitList)
 				exitList[id] = Exit(exitDialog.le.text(), source)
 				exitList[id].dest = destination
 				self.drawExit(id)
-				self.ui.scene.addItem(exitList[id].line)
+				self.scene.addItem(exitList[id].line)
 				if exitDialog.checkBox.isChecked():
 					id = findNewId(exitList)
 					exitList[id] = Exit(exitDialog.le2.text(), destination)
 					exitList[id].dest = source
 					self.drawExit(id)
-					self.ui.scene.addItem(exitList[id].line)
-				self.drawRoom(self.ui.graphicsView.chainRoom[x])
-				self.drawRoom(self.ui.graphicsView.chainRoom[x+1])
+					self.scene.addItem(exitList[id].line)
+				self.drawRoom(self.graphicsView.chainRoom[x])
+				self.drawRoom(self.graphicsView.chainRoom[x+1])
 			self.updateStatusExit()
 
 	def editRoomProperties(self, index):
@@ -449,16 +442,16 @@ class Main(QtWidgets.QMainWindow):
 		if labelDialog.exec_():
 			id = findNewId(labelList)
 			labelList[id] = Label(labelDialog.le.text(), id, x_, y_)
-			self.ui.scene.addItem(labelList[id].text)
-			self.ui.scene.addItem(labelList[id].box)
-			labelList[id].box.move_restrict_rect = QRectF(0, 0, self.ui.scene.width(), self.ui.scene.height())
+			self.scene.addItem(labelList[id].text)
+			self.scene.addItem(labelList[id].box)
+			labelList[id].box.move_restrict_rect = QRectF(0, 0, self.scene.width(), self.scene.height())
 			self.drawLabel(id)
 			labelDialog.close()
 			self.updateStatusLabel()
 
 	def deleteLabel(self, id_):
-		self.ui.scene.removeItem(labelList[id_].text)
-		self.ui.scene.removeItem(labelList[id_].box)
+		self.scene.removeItem(labelList[id_].text)
+		self.scene.removeItem(labelList[id_].box)
 		del labelList[id_]
 		self.updateStatusLabel()
 
@@ -486,7 +479,7 @@ if __name__ == "__main__":
 			elif diggerconf.exportType == 'json':
 				window.populateFromJson(window.fileName)
 
-			print(generateCode(window.fileName, roomList, exitList, labelList))
+			print(mush.generateCode(window.fileName, roomList, exitList, labelList))
 	else:
 		window.show()
 		sys.exit(app.exec_())
