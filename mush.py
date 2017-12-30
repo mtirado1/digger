@@ -82,8 +82,8 @@ def saveToJson(fname, parent, rooms, exits, labels):
 
 	jmap = {
 			'version':diggerconf.version,
-			'width':parent.ui.scene.width(),
-			'height':parent.ui.scene.height(),
+			'width':parent.scene.width(),
+			'height':parent.scene.height(),
 			'bcolor':parent.bColor,
 			'rooms':jroomList,
 			'exits':jexitList,
@@ -98,7 +98,7 @@ def saveToXml(fname, parent, rooms, exits, labels):
 	stream = QTextStream(fsave)
 	stream.setCodec("UTF-8")
 	stream << ("<?xml version='1.0' encoding='UTF-8'?>\n" + "<!DOCTYPE DIGGER>\n" + "<DIGGER VERSION='%s'>\n" % (diggerconf.version))
-	stream << ("<map width='%d' height='%d' bcolor='%s'>\n" % (parent.ui.scene.width(), parent.ui.scene.height(), parent.bColor))
+	stream << ("<map width='%d' height='%d' bcolor='%s'>\n" % (parent.scene.width(), parent.scene.height(), parent.bColor))
 	for i, room in rooms.items():
 		stream << ("\t<room id='%d' x='%d' y='%d' bcolor='%s' size='%d'>\n" % (i, room.x, room.y, room.bColor, room.center))
 		stream << "\t\t<name>" << escape(room.name) << "</name>\n"
@@ -182,6 +182,6 @@ def generateCode(title, rooms, exits, labels):
 			strExport += "&" + diggerconf.attributePrefix  + str(k) + " me\n"
 	if diggerconf.exportLabels:
 		for k, label in labels.items():
-			strExport += "think LABEL: *** " + label.normalText + " ***\n"
+			strExport += "think LABEL: *** " + mushEscape(label.normalText) + " ***\n"
 	return strExport
 

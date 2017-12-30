@@ -441,7 +441,7 @@ class Main(QtWidgets.QMainWindow):
 		labelDialog = addLabel()
 		if labelDialog.exec_():
 			id = findNewId(labelList)
-			labelList[id] = Label(labelDialog.le.text(), id, x_, y_)
+			labelList[id] = Label(labelDialog.te.toPlainText(), id, x_, y_)
 			self.scene.addItem(labelList[id].text)
 			self.scene.addItem(labelList[id].box)
 			labelList[id].box.move_restrict_rect = QRectF(0, 0, self.scene.width(), self.scene.height())
@@ -459,9 +459,9 @@ class Main(QtWidgets.QMainWindow):
 		objectClicked = id_
 		editDialog = addLabel()
 		editDialog.setWindowTitle("Edit Label")
-		editDialog.le.setText(labelList[objectClicked].normalText)
+		editDialog.te.document().setPlainText(labelList[objectClicked].normalText)
 		if editDialog.exec_():
-			labelList[objectClicked].setText(editDialog.le.text())
+			labelList[objectClicked].setText(editDialog.te.toPlainText())
 			labelList[objectClicked].box.setRect(0, 0, labelList[objectClicked].text.boundingRect().width(), labelList[objectClicked].text.boundingRect().height())
 
 if __name__ == "__main__":

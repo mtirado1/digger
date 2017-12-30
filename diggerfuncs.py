@@ -173,7 +173,7 @@ def importJson(self, fname):
 			retmap.exits[id].verbs = e['verbs']
 		for l in labels:
 			id = findNewId(retMap.labels)
-			retMap.labels[id] = Label(l["text"], l["x"], l["y"])
+			retMap.labels[id] = Label(l["text"], id, l["x"], l["y"])
 		return retMap
 
 def importXml(self, fname):
@@ -245,7 +245,7 @@ def importXml(self, fname):
 
 	for element in labels:
 		id = findNewId(retMap.labels)
-		retMap.labels[id] = Label(getText(element), int(element.getAttribute("x")), int(element.getAttribute("y")))
+		retMap.labels[id] = Label(getText(element), id, int(element.getAttribute("x")), int(element.getAttribute("y")))
 
 	return retMap
 
@@ -539,11 +539,12 @@ class addLabel(QDialog):
 	def __init__(self, parent = None):
 		super(addLabel, self).__init__(parent)
 		layout = QFormLayout()
-		self.lbl = QLabel("Label")
-		self.le = QLineEdit()
+		self.lbl = QLabel("HTML Text")
+		self.te = QPlainTextEdit()
 		self.setLayout(layout)
 		self.setWindowTitle("Add Label")
 		self.btn1 = QPushButton("Ok")
-		layout.addRow(self.lbl, self.le)
+		layout.addRow(self.lbl)
+		layout.addRow(self.te)
 		self.btn1.clicked.connect(self.accept)
 		layout.addRow(self.btn1)
