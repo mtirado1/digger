@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import *
 import xml.dom.minidom
 from xml.dom.minidom import parse
 import json
-
+from PyQt5 import uic
 
 #######################################
 # Global Dictionaries
@@ -302,10 +302,10 @@ class optionsClass(QDialog):
 		self.bColor = QColorDialog.getColor(initial = self.bColor)
 
 	def setData(self):
-		self.sp.setValue(int(self.parent().parent().scene.width()))
-		self.sp2.setValue(int(self.parent().parent().scene.height()))
-		self.rColor = QColor(self.parent().parent().roomBColor)
-		self.bColor = QColor(self.parent().parent().bColor)
+		self.sp.setValue(int(self.parent().scene.width()))
+		self.sp2.setValue(int(self.parent().scene.height()))
+		self.rColor = QColor(self.parent().roomBColor)
+		self.bColor = QColor(self.parent().bColor)
 
 
 class newRoom(QDialog):
@@ -324,75 +324,26 @@ class newRoom(QDialog):
 class editRoom(QDialog):
 	def __init__(self, parent = None):
 		super(editRoom, self).__init__(parent)
+		uic.loadUi('ui/room_edit.ui', self)
 		self.setWindowTitle("Edit Room Properties")
-		self.tabName = QWidget()
-		self.tabDesc = QWidget()
-		self.tabCode = QWidget()
-		self.tab = QTabWidget()
-		self.btn1 = QPushButton("Ok")
-		self.btn1.clicked.connect(self.accept)
-		self.tab.addTab(self.tabName, "Name")
-		self.tab.addTab(self.tabDesc, "Description")
-		self.tab.addTab(self.tabCode, "Code")
-		self.color = QColor()
-		tabLayout = QFormLayout()
-		tabLayout.addRow(self.tab)
-		tabLayout.addRow(self.btn1)
-		self.setLayout(tabLayout)
-
-		layout = QFormLayout() # Layout for name tab
-		self.cur_room = 0
-		self.lbl = QLabel("Name")
-		self.le = QLineEdit()
-		self.lbl2 = QLabel("Position")
-		self.le2 = QLineEdit()
-		self.le3 = QLineEdit()
-		self.lbl3 = QLabel("Color")
-		self.btnColor = QPushButton("Select...")
-		self.btnColor.clicked.connect(self.openColorDialog)
-
-		self.lbl4 = QLabel("Size")
-		self.sp = QSpinBox()
-		self.sp.setRange(5, 50)
-
-		layout.addRow(self.lbl,self.le)
-		layout.addRow(self.lbl2)
-		layout.addRow(self.le2, self.le3)
-		layout.addRow(self.lbl3, self.btnColor)
-		layout.addRow(self.lbl4, self.sp)
-		self.tabName.setLayout(layout)
-
-		layout2 = QFormLayout() # Layout for description tab
-		self.lblDesc = QLabel("Description")
-		self.te = QTextEdit()
-		layout2.addRow(self.lblDesc)
-		layout2.addRow(self.te)
-		self.tabDesc.setLayout(layout2)
-
-		layout3 = QFormLayout() # Layout for code tab
-		self.lblCode = QLabel("Code")
-		self.te2 = QTextEdit()
-		layout3.addRow(self.lblCode)
-		layout3.addRow(self.te2)
-		self.tabCode.setLayout(layout3)
 
 		if diggerconf.monospaceEdit:
-			self.te.setFontFamily("Monospace")
-			self.te2.setFontFamily("Monospace")
+			self.te_description.setFontFamily("Monospace")
+			self.te_code.setFontFamily("Monospace")
+
+		self.btn_color.clicked.connect(self.openColorDialog)
 
 	def openColorDialog(self):
 		self.color = QColorDialog.getColor(initial = self.color)
 
-
-
 	def setData(self, room):
 		self.color = QColor(roomList[room].bColor)
-		self.le.setText(roomList[room].name)
-		self.te.setPlainText(roomList[room].desc)
-		self.te2.setPlainText(str("\n".join(roomList[room].code))) # Join lines of mushcode
-		self.le2.setText(str(int(roomList[room].x)))
-		self.le3.setText(str(int(roomList[room].y)))
-		self.sp.setValue((roomList[room].size-1)/2)
+		self.le_name.setText(roomList[room].name)
+		self.te_description.setPlainText(roomList[room].desc)
+		self.te_code.setPlainText("\n".join(roomList[room].code)) # Join lines of mushcode
+		self.sb_pos_x.setValue(int(roomList[room].x))
+		self.sb_pos_y.setValue(int(roomList[room].y))
+		self.sb_size.setValue((roomList[room].size-1)/2)
 
 class newExitName(QDialog):
 	def __init__(self, parent = None):

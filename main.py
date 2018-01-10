@@ -21,7 +21,7 @@ except AttributeError:
 class Main(QtWidgets.QMainWindow):
 	def __init__(self):
 		QtWidgets.QMainWindow.__init__(self, parent = None)
-		uic.loadUi('digger.ui', self)
+		uic.loadUi('ui/digger.ui', self)
 
 		self.resize(1080, 683)
 		self.scene = QGraphicsScene(self.graphicsView)
@@ -398,15 +398,15 @@ class Main(QtWidgets.QMainWindow):
 		editDialog = editRoom()
 		editDialog.setData(index)
 		if editDialog.exec_():
-			roomList[index].name=editDialog.le.text()
-			roomList[index].desc=editDialog.te.toPlainText()
-			roomList[index].x=int(editDialog.le2.text())
-			roomList[index].y=int(editDialog.le3.text())
-			roomList[index].size = (2 * editDialog.sp.value()) + 1
-			roomList[index].center = editDialog.sp.value()
+			roomList[index].name=editDialog.le_name.text()
+			roomList[index].desc=editDialog.te_description.toPlainText()
+			roomList[index].x=editDialog.sb_pos_x.value()
+			roomList[index].y=editDialog.sb_pos_y.value()
+			roomList[index].size = (2 * editDialog.sb_size.value()) + 1
+			roomList[index].center = editDialog.sb_size.value()
 			if editDialog.color.isValid():
 				roomList[index].bColor = editDialog.color.name()
-			codeList = editDialog.te2.toPlainText().split("\n")
+			codeList = editDialog.te_code.toPlainText().split("\n")
 			roomList[index].code = []
 			for codeLine in codeList:
 				roomList[index].code.append(str(codeLine))

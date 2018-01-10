@@ -226,6 +226,8 @@ class mapView(QtWidgets.QGraphicsView):
 			menu.addSeparator()
 			actionPaste = menu.addAction("Paste")
 			actionPaste.setShortcut("Ctrl+V")
+			if self.parent().parent().copyID == -1:
+				actionPaste.setEnabled(False)
 			actionPaste.setIcon(QIcon.fromTheme('edit-paste'))
 			action = menu.exec_(event.globalPos())
 			if action == actionNewRoom:
