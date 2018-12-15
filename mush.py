@@ -2,7 +2,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import json
 import diggerconf
-from cgi import escape
+from html import escape
 
 # MUSH-related functions and variables
 
